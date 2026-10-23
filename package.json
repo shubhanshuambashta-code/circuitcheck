@@ -7,7 +7,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:pages": "tsc -b && vite build --mode pages"
   },
   "dependencies": {
     "react": "19.2.0",

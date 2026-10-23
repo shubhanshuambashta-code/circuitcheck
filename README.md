@@ -54,6 +54,14 @@ sh scripts/setup.sh
 
 Linux/macOS startup scripts are supplied but were not executed here. Do not copy the Windows CLI path from `.env.example` on Linux.
 
+## GitHub Pages preview
+
+The published site is a static product preview with known-answer test downloads and local startup instructions. GitHub Pages cannot execute FastAPI, SQLite jobs or native KiCad. Uploading a design and running analysis require the local application described above. This is not a hosted analysis service.
+
+In **Settings > Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` installs locked frontend dependencies, runs `npm run build:pages`, and deploys only `dist-pages/`. The Pages build uses `/circuitcheck/` as its base; `npm run build` still produces the working local application in `dist/` with `/` as its base. Do not publish the source folder directly: browsers cannot execute the TypeScript entry point without Vite's build step.
+
+To preview the Pages build locally, run `npm run build:pages`, then `npm run preview -- --mode pages --outDir dist-pages --port 4173`. Visit `http://127.0.0.1:4173/circuitcheck/`. A full public analysis deployment would additionally require a server with KiCad, worker processes, persistent storage, authentication, project ownership checks and isolated execution; none is provisioned by this workflow.
+
 ## Development and tests
 
 The API and worker must both run. From this folder, with the Python environment activated:

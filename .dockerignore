@@ -7,3 +7,6 @@ playwright-report
 screenshots
 __pycache__
 .git
+
+dist-pages
+pages-tests

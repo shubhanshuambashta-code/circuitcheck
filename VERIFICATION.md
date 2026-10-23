@@ -65,3 +65,9 @@ Executed for this fix: `npm run build` passed; `playwright test e2e/connection.s
 ## Board-only workspace
 
 Removed the Schematic tab, sheet selector and automatic switching to schematic previews. Board layout is the sole design view. Findings from another file do not produce a location marker or locate action on the displayed board. TypeScript/Vite production build passed and the live workspace was visually checked with the Schematic tab absent. This small UI removal did not require another native-engine regression run. Render: `screenshots/board-only-workspace.png`.
+
+## GitHub Pages deployment fix
+
+Reproduced the blank published page: Pages served the source index from main directly, which referenced an unbuilt TypeScript entry point at the domain root. Added a separate `build:pages` mode with `/circuitcheck/` base, `dist-pages/` output and a pinned GitHub Actions build/deploy workflow. The local production build continues to use `/` and `dist/`. Static Pages displays a product preview, local startup instructions and test downloads; it does not claim to run the Python/KiCad backend or accept designs.
+
+Executed: `npm run build:pages` and `npm run build` passed. Two dedicated Playwright checks passed at 1440px and 390px, covering rendering, image decoding, startup navigation, no horizontal overflow, all three native ZIP downloads, return navigation and zero API requests. New browser tests are in `pages-tests/`; run `npx playwright test --config=playwright.pages.config.ts` after building Pages. Native analysis and repair code did not change; the earlier engine-test results are not a new run.
