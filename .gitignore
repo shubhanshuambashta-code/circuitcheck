@@ -1,0 +1,57 @@
+# Python environments, caches and test output
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+
+# Node dependencies and generated frontend files
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local project uploads, database, reports and runtime files
+/data/
+*.sqlite3
+*.sqlite3-*
+*.db-journal
+*.log
+*.pid
+
+# Credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Browser test reports (keep the actual tests and synthetic fixtures)
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
+
+# Editors, operating systems and native CAD autosaves
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*.bak
+*.kicad_prl
+*.lck
+*-backups/
+~$*

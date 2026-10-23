@@ -1,0 +1,3 @@
+# Original fixture custom rule
+(version 1)
+(rule "Review width" (condition "A.Type == 'Track'") (constraint track_width (min 0.35mm)))

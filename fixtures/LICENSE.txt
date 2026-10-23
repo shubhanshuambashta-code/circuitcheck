@@ -1,0 +1,2 @@
+All fixture design files in this directory are original CircuitCheck test content dedicated to the public domain under CC0 1.0. https://creativecommons.org/publicdomain/zero/1.0/
+They are synthetic test designs, not a validated functional circuit.

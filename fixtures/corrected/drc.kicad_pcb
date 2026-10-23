@@ -1,0 +1,7 @@
+(kicad_pcb (version 20241229) (generator "circuitcheck-fixture")
+ (general (thickness 1.6)) (paper "A4")
+ (layers (0 "F.Cu" signal) (31 "B.Cu" signal) (36 "B.SilkS" user "b.silkscreen") (37 "F.SilkS" user "f.silkscreen") (38 "B.Mask" user) (39 "F.Mask" user) (44 "Edge.Cuts" user))
+ (setup (pad_to_mask_clearance 0))
+ (net 0 "") (net 1 "GND") (net 2 "+3V3") (net 3 "SDA") (net 4 "SCL")
+(gr_rect (start 50 50) (end 110 90) (stroke (width 0.1) (type default)) (fill none) (layer "Edge.Cuts") (uuid "d49926d1-5d6e-57cc-9eb2-a4112f3de742"))(segment (start 65 65) (end 85 65) (width 0.25) (layer "F.Cu") (net 1) (uuid "1e63b2de-8742-5f21-9122-a1d45ee19a3a"))
+)

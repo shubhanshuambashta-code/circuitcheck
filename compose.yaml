@@ -1,0 +1,34 @@
+services:
+  api:
+    build: .
+    image: circuitcheck:0.1.0
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: ["designs:/data"]
+    environment:
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_MODEL: ${AI_MODEL:-gpt-4.1-mini}
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs: ["/tmp:size=128m,mode=1777"]
+    restart: unless-stopped
+  worker:
+    build: .
+    image: circuitcheck:0.1.0
+    command: ["python", "-m", "backend.worker"]
+    volumes: ["designs:/data"]
+    network_mode: none
+    mem_limit: 1536m
+    cpus: 2
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs: ["/tmp:size=256m,mode=1777"]
+    restart: unless-stopped
+volumes:
+  designs:

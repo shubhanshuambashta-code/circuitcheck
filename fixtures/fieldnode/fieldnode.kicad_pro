@@ -1,0 +1,31 @@
+{
+  "board": {
+    "design_settings": {
+      "rules": {
+        "min_track_width": 0.25,
+        "min_clearance": 0.2,
+        "min_copper_edge_clearance": 0.2
+      },
+      "rule_severities": {
+        "track_width": "error",
+        "clearance": "error",
+        "unconnected_items": "warning"
+      }
+    }
+  },
+  "meta": {
+    "filename": "fieldnode.kicad_pro",
+    "version": 1
+  },
+  "net_settings": {
+    "classes": [
+      {
+        "name": "Default",
+        "clearance": 0.2,
+        "track_width": 0.3,
+        "via_diameter": 0.6,
+        "via_drill": 0.3
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+import {test,expect} from '@playwright/test';
+import path from 'node:path';
+
+test('repair action stays visible and detected files link to coverage',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await page.goto('/');
+ await page.keyboard.press('Tab');
+ await expect(page.getByRole('link',{name:'Skip to design review'})).toBeFocused();
+ await page.keyboard.press('Enter');
+ await expect(page.locator('#review-main')).toBeFocused();
+ await page.getByRole('button',{name:'Upload project',exact:true}).first().click();
+ await page.locator('input[type=file]').setInputFiles(['drc.kicad_pcb','drc.kicad_pro'].map(file=>path.resolve('fixtures/drc',file)));
+ await expect(page.getByText('Checks completed',{exact:true})).toBeVisible({timeout:60000});
+ const action=page.getByRole('button',{name:'Preview change',exact:true});
+ await expect(action).toBeInViewport({ratio:1});
+ const before=await action.boundingBox();
+ await page.locator('.detail-scroll').evaluate(el=>{el.scrollTop=el.scrollHeight});
+ expect((await action.boundingBox())?.y).toBe(before?.y);
+ await expect(action).toBeInViewport({ratio:1});
+ await page.getByRole('button',{name:'View 2 project files'}).click();
+ await expect(page.getByRole('dialog')).toContainText('drc.kicad_pcb');
+ await expect(page.getByRole('dialog')).toContainText('drc.kicad_pro');
+ const dialog=await page.getByRole('dialog').boundingBox();
+ expect(Math.abs(dialog!.x+dialog!.width/2-720)).toBeLessThan(2);
+ expect(Math.abs(dialog!.y+dialog!.height/2-450)).toBeLessThan(2);
+ await page.getByRole('button',{name:'View check coverage'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.locator('.coverage-list')).toContainText('DRC');
+ await page.getByRole('button',{name:'Layers',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Layers',exact:true})).toHaveAttribute('aria-expanded','true');
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('button',{name:'Layers',exact:true})).toHaveAttribute('aria-expanded','false');
+ await expect(page.getByRole('button',{name:'Layers',exact:true})).toBeFocused();
+ await page.setViewportSize({width:390,height:844});
+ await page.locator('.mobile-panel-tabs').getByRole('button',{name:'Details',exact:true}).click();
+ await expect(action).toBeInViewport({ratio:1});
+ await expect(page.locator('body')).toHaveJSProperty('scrollWidth',390);
+});
