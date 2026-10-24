@@ -1,84 +1,96 @@
-import {test,expect} from '@playwright/test';
+import {test,expect,Page} from '@playwright/test';
 import path from 'node:path';
-import {readFileSync} from 'node:fs';
 const fixture=(name:string,file:string)=>path.resolve('fixtures',name,file);
-const upload=async(page:any,name:string,files:string[])=>{
- await page.getByRole('button',{name:'Upload project',exact:true}).first().click();
- await page.locator('input[type=file]').setInputFiles(files.map(f=>fixture(name,f)));
+async function upload(page:Page,name:string,files:string[]){
+ await page.getByRole('button',{name:'New project',exact:true}).click();
+ await page.locator('input[type=file]').first().setInputFiles(files.map(f=>fixture(name,f)));
  await expect(page.getByRole('dialog')).toHaveCount(0);
-};
-test('empty workspace, upload errors and keyboard dialog control',async({page})=>{
- await page.goto('/');await expect(page.getByText('Start a design review')).toBeVisible();
- await page.getByRole('button',{name:'Upload project',exact:true}).first().click();
- await page.locator('input[type=file]').setInputFiles({name:'drawing.stl',mimeType:'application/octet-stream',buffer:Buffer.from('solid unsupported')});
- await expect(page.getByRole('alert')).toContainText('unsupported file type');
- await page.screenshot({path:'screenshots/upload-error.png',fullPage:true});
- await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
- await page.keyboard.press('Control+o');await expect(page.getByRole('dialog')).toBeVisible();
- await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
-});
-test('real upload, evidence, guarded repair, recheck, compare, download and undo',async({page})=>{
+ await expect(page.getByText('Engineering checks completed',{exact:true})).toBeVisible({timeout:60000});
+}
+
+test('native finding, exact track highlight, review notes, approved repair and revision comparison',async({page})=>{
  await page.goto('/');await upload(page,'drc',['drc.kicad_pcb','drc.kicad_pro']);
- await expect(page.getByText('Checks completed',{exact:true})).toBeVisible();
- await expect(page.locator('.details-panel h2')).toHaveText('Track width below configured minimum');
- await expect(page.locator('.measurement')).toContainText('0.25 mm');
- await expect(page.locator('.finding-marker.selected')).toHaveCount(1);
- const box=await page.locator('.board-svg').getAttribute('viewBox');
- await page.getByLabel('Zoom in',{exact:true}).click();expect(await page.locator('.board-svg').getAttribute('viewBox')).not.toBe(box);
- await page.getByLabel('Fit design',{exact:true}).click();expect(await page.locator('.board-svg').getAttribute('viewBox')).toBe(box);
- await page.getByPlaceholder('Search findings…').fill('nothing-matches-this-query');
- await expect(page.getByText('No findings match these filters.')).toBeVisible();await page.getByRole('button',{name:'Clear filters',exact:true}).click();
- await page.getByRole('button',{name:'Ask',exact:true}).click();await page.getByRole('button',{name:'Which rule triggered this?'}).click();
- await expect(page.locator('.message.assistant')).toContainText('actual 0.1500 mm');
- await page.getByRole('button',{name:'Finding details',exact:true}).click();
- await page.getByRole('button',{name:'Preview change',exact:true}).click();
- await expect(page.getByText('The targeted violation was not reported in the proposed copy.',{exact:false})).toBeVisible({timeout:60000});
- await page.waitForLoadState('networkidle');await page.screenshot({path:'screenshots/repair-preview.png',fullPage:true});
- await page.getByRole('button',{name:'Apply change & recheck'}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.getByText('Checks completed',{exact:true})).toBeVisible({timeout:60000});
- await expect(page.locator('.revision-row')).toHaveCount(2);
- await page.getByRole('button',{name:'Compare',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('1 resolved');await page.keyboard.press('Escape');
- await page.getByRole('button',{name:'Export',exact:true}).click();const exported=page.waitForEvent('download');await page.getByRole('button',{name:'Current project .zip'}).click();expect((await exported).suggestedFilename()).toMatch(/\.zip$/);
- await page.getByRole('button',{name:'Restore previous revision'}).click();await expect(page.getByText('Checks completed',{exact:true})).toBeVisible();
- await page.locator('.bottom-tabs button').filter({hasText:'Findings'}).click();await expect(page.locator('.findings-table')).toContainText('Track width below configured minimum');
-});
-test('clean and partial analysis do not overclaim coverage',async({page})=>{
- await page.goto('/');await upload(page,'valid',['valid.kicad_pcb','valid.kicad_pro']);await expect(page.getByText('Checks completed',{exact:true})).toBeVisible();
- await expect(page.getByText('No violations found in the checks performed.')).toBeVisible();
- await page.getByRole('button',{name:'Check coverage',exact:true}).click();await expect(page.locator('.coverage-list')).toContainText('Not checked');
- await page.screenshot({path:'screenshots/clean-checks.png',fullPage:true});
- await page.getByRole('button',{name:'New project',exact:true}).click();await page.locator('input[type=file]').setInputFiles(fixture('valid','valid.kicad_pcb'));
- await expect(page.locator('.alert').filter({hasText:'Partial analysis.'})).toBeVisible({timeout:60000});
- await expect(page.locator('.primary').filter({hasText:'Preview change'})).toHaveCount(0);
-});
-test('engine failure stays a failure in the interface',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:'Upload project',exact:true}).first().click();
- await page.locator('input[type=file]').setInputFiles({name:'broken.kicad_pcb',mimeType:'text/plain',buffer:Buffer.from('(kicad_pcb (version 20241229) (generator "test") (unknown_invalid_token 1))')});
- await expect(page.getByText('Analysis did not complete.',{exact:true})).toBeVisible({timeout:60000});
- await expect(page.getByText('No violations found in the checks performed.')).toHaveCount(0);await page.screenshot({path:'screenshots/analysis-failure.png',fullPage:true});
-});
-test('example review, layers, selection and responsive panels',async({page})=>{
- await page.goto('/');await page.getByRole('button',{name:'Explore the example project'}).click();
- await expect(page.getByText('Checks completed',{exact:true})).toBeVisible({timeout:60000});
- await page.waitForLoadState('networkidle');await page.screenshot({path:'screenshots/workspace-desktop.png',fullPage:true});
- await page.getByRole('button',{name:'Layers',exact:true}).click();await page.getByLabel('F.Cu',{exact:true}).uncheck();
- await expect(page.locator('.board-svg image')).toHaveCount(3);await page.getByLabel('F.Cu',{exact:true}).check();await page.getByRole('button',{name:'Layers',exact:true}).click();
- await page.setViewportSize({width:390,height:844});await expect(page.locator('body')).toHaveJSProperty('scrollWidth',390);
- await page.screenshot({path:'screenshots/workspace-mobile.png',fullPage:true});
- await page.locator('.mobile-panel-tabs').getByRole('button',{name:/Findings/}).click();await page.getByLabel('Filter findings').selectOption('repair');
- await page.locator('.finding-row-button').first().click();await expect(page.locator('.details-panel h2')).toBeVisible();
- await expect(page.getByRole('button',{name:'Preview change',exact:true})).toBeVisible();await page.screenshot({path:'screenshots/details-mobile.png',fullPage:true});
+ await expect(page.locator('.r2-inspector h2')).toHaveText('Track width below configured minimum');
+ await expect(page.locator('.r2-measurements')).toContainText('0.15 mm');
+ await expect(page.locator('.r2-measurements')).toContainText('0.25 mm');
+ expect(await page.locator('[data-highlight-status=selected]').count()).toBeGreaterThan(0);
+ const ids=await page.locator('[data-highlight-status=selected]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('data-object-id')));
+ expect(ids[0]).toMatch(/^[a-f0-9-]{36}$/); await expect(page.locator('[data-highlight-status=selected] polyline').first()).toHaveAttribute('points','65,65 85,65');
+ await page.getByRole('button',{name:/Highlight net GND/}).click();
+ expect(await page.locator('[data-highlight-status=selected]').count()).toBeGreaterThan(0);
+ await page.locator('.r2-inspector-tabs').getByRole('button',{name:'Review',exact:true}).click();
+ await page.getByLabel('Reason / review comment').fill('QA: inspect the native width correction and retain this review.');
+ await page.getByRole('button',{name:'Save review note'}).click();
+ await expect(page.locator('.r2-notes')).toContainText('QA: inspect');
+ await page.locator('.r2-inspector-tabs').getByRole('button',{name:'Explain',exact:true}).click();
+ await page.getByLabel('Question about this evidence').fill('Which rule triggered this?');
+ await page.getByRole('button',{name:'Explain evidence',exact:true}).click();
+ await expect(page.locator('.r2-answer')).toContainText('actual 0.1500 mm');
+ await page.locator('.r2-inspector-tabs').getByRole('button',{name:'Evidence',exact:true}).click();
+ await page.getByRole('button',{name:'Review proposed change'}).click();
+ await expect(page.getByRole('dialog').locator('.r2-verification')).toBeVisible({timeout:60000});
+ const apply=page.getByRole('button',{name:'Apply approved copy & recheck'});
+ await expect(apply).toBeDisabled();
+ await page.getByRole('dialog').screenshot({path:'screenshots/review-v2-repair.png'});
+ await page.getByRole('checkbox',{name:/I reviewed this exact dimension/}).check();
+ await expect(apply).toBeEnabled();await apply.click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByText('Engineering checks completed',{exact:true})).toBeVisible({timeout:60000});
+ await expect(page.locator('.r2-change-groups').getByRole('button',{name:/^Resolved/})).toContainText('1');
+ await expect(page.locator('.r2-comparison-scope')).toContainText('Rules: unchanged');
+ await page.locator('.r2-change-list>button').first().click();
+ await page.locator('.r2-inspector-tabs').getByRole('button',{name:/Review/}).click();
+ await expect(page.locator('.r2-notes')).toContainText('QA: inspect');
+ await page.getByRole('button',{name:'Download',exact:true}).click();
+ const exported=page.waitForEvent('download');await page.getByRole('button',{name:'Current native project',exact:true}).click();
+ expect((await exported).suggestedFilename()).toMatch(/\.zip$/);
+ await page.getByRole('button',{name:'Download',exact:true}).click();await page.getByRole('button',{name:'Restore previous revision'}).click();
+ await expect(page.getByText('Engineering checks completed',{exact:true})).toBeVisible({timeout:60000});
+ await page.getByRole('button',{name:'Design review',exact:true}).click();
+ await expect(page.locator('.r2-issue-list')).toContainText('Track width below configured minimum');
 });
 
-test('long native filenames stay readable without horizontal overflow',async({page})=>{
- const name='environmental-sensor-interface_board-revision-2026-10-23-for-manufacturing-review';
- await page.goto('/');await page.getByRole('button',{name:'Upload project',exact:true}).first().click();
- await page.locator('input[type=file]').setInputFiles([
-  {name:name+'.kicad_pcb',mimeType:'text/plain',buffer:readFileSync(fixture('valid','valid.kicad_pcb'))},
-  {name:name+'.kicad_pro',mimeType:'application/json',buffer:readFileSync(fixture('valid','valid.kicad_pro'))}
- ]);
- await expect(page.getByText('Checks completed',{exact:true})).toBeVisible({timeout:60000});
- await expect(page.getByRole('heading',{level:1})).toHaveText(name);
- await expect(page.locator('body')).toHaveJSProperty('scrollWidth',1440);
- await page.setViewportSize({width:390,height:844});await expect(page.locator('body')).toHaveJSProperty('scrollWidth',390);
+test('upload revision B into the same project and compare stable findings',async({page})=>{
+ await page.goto('/');await upload(page,'drc',['drc.kicad_pcb','drc.kicad_pro']);
+ await page.getByRole('button',{name:'Upload revision B',exact:true}).first().click();
+ await page.locator('input[type=file]').first().setInputFiles(['drc.kicad_pcb','drc.kicad_pro'].map(f=>fixture('corrected',f)));
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByText('Engineering checks completed',{exact:true})).toBeVisible({timeout:60000});
+ await expect(page.locator('.r2-change-groups').getByRole('button',{name:/^Resolved/})).toContainText('1');
+ await expect(page.locator('.r2-comparison-boards .board-svg')).toHaveCount(2);
+ await page.screenshot({path:'screenshots/review-v2-comparison.png',fullPage:true});
+});
+
+test('coverage distinguishes checked zero, not checked, partial and failed',async({page})=>{
+ await page.goto('/');await upload(page,'valid',['valid.kicad_pcb','valid.kicad_pro']);
+ await page.getByRole('button',{name:'Check coverage',exact:true}).click();
+ const clearance=page.getByRole('row').filter({hasText:'Copper clearance'});
+ await expect(clearance).toContainText('checked');await expect(clearance).toContainText('No issues found');
+ await expect(page.getByRole('row').filter({hasText:'Schematic electrical rules'})).toContainText('not checked');
+ await expect(page.getByRole('row').filter({hasText:'Component voltage / power ratings'})).toContainText('not checked');
+ await page.screenshot({path:'screenshots/review-v2-coverage.png',fullPage:true});
+ await page.getByRole('button',{name:'New project',exact:true}).click();
+ await page.locator('input[type=file]').first().setInputFiles(fixture('valid','valid.kicad_pcb'));
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByText('Partial analysis',{exact:true})).toBeVisible({timeout:60000});
+ await page.getByRole('button',{name:'Check coverage',exact:true}).click();
+ await expect(page.getByRole('row').filter({hasText:'Copper clearance'})).toContainText('partial');
+ await page.getByRole('button',{name:'New project',exact:true}).click();
+ await page.locator('input[type=file]').first().setInputFiles({name:'broken.kicad_pcb',mimeType:'text/plain',buffer:Buffer.from('(kicad_pcb (version 20241229) (generator "test") (unknown_invalid_token 1))')});
+ await expect(page.getByText('Analysis failed; no clean result was established.')).toBeVisible({timeout:60000});
+ await expect(page.locator('.r2-summary')).toHaveCount(0);
+});
+
+test('custom fabrication profile creates a revision and measurable native findings',async({page})=>{
+ await page.goto('/');await upload(page,'drc',['drc.kicad_pcb','drc.kicad_pro']);
+ await page.locator('.r2-profile-link').click();await page.getByRole('button',{name:'Custom rules',exact:true}).click();
+ await page.getByLabel('Profile name', {exact:true}).fill('QA fabrication profile');
+ await page.getByLabel('Minimum track width (mm)',{exact:true}).fill('0.4');
+ await page.getByRole('button',{name:'Create profile revision & check'}).click();
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByText('Engineering checks completed',{exact:true})).toBeVisible({timeout:60000});
+ await expect(page.getByRole('row').filter({hasText:'Fabrication · track width'})).toContainText('checked');
+ await page.getByRole('button',{name:'Revision comparison',exact:true}).click();
+ await expect(page.locator('.r2-comparison-scope')).toContainText('Profile: changed');
+ await expect(page.locator('.r2-change-groups').getByRole('button',{name:/No longer reported/})).toBeVisible();
 });

@@ -71,3 +71,21 @@ Removed the Schematic tab, sheet selector and automatic switching to schematic p
 Reproduced the blank published page: Pages served the source index from main directly, which referenced an unbuilt TypeScript entry point at the domain root. Added a separate `build:pages` mode with `/circuitcheck/` base, `dist-pages/` output and a pinned GitHub Actions build/deploy workflow. The local production build continues to use `/` and `dist/`. Static Pages displays a product preview, local startup instructions and test downloads; it does not claim to run the Python/KiCad backend or accept designs.
 
 Executed: `npm run build:pages` and `npm run build` passed. Two dedicated Playwright checks passed at 1440px and 390px, covering rendering, image decoding, startup navigation, no horizontal overflow, all three native ZIP downloads, return navigation and zero API requests. New browser tests are in `pages-tests/`; run `npx playwright test --config=playwright.pages.config.ts` after building Pages. Native analysis and repair code did not change; the earlier engine-test results are not a new run.
+
+## Version 0.2 engineering review update — 24 October 2026
+
+Executed with native KiCad 10.0.7 on Windows:
+
+- Full backend suite: **56 passed**, no skipped tests, in 65.75 seconds. One third-party Starlette/AnyIO deprecation warning remains.
+- Local and Pages production builds: TypeScript and Vite passed for both modes.
+- Local browser suite: **6 passed**, covering connection recovery, responsive board/object highlighting, evidence/review/explanation, guarded repair and recheck, linked revision upload, coverage states and fabrication profiles.
+- Pages browser check: **1 passed**, including widths 360, 390, 768, 1024 and 1440 pixels, recorded-evidence navigation, downloads, zero browser errors and explicit local-app requirements.
+- After the final compact workspace and comparison alignment changes, the interface and complete native repair/review workflows passed again. The Pages check also passed again and verified identical SVG view boxes for both sides of a selected changed component.
+- Final manufacturer-profile browser rerun: **1 passed** in 23.0 seconds. An earlier rerun could not connect because its temporary QA server had stopped; restarting the test supervisor resolved this environment failure.
+- Final linked-upload backend check: **1 passed**, confirming original-file preservation and review history after the root-selection improvement.
+
+New native regression checks cover exact UUID geometry, physical object/net changes, coverage distinctions, rule changes preventing a false resolved claim, exception-scope validity, unknown order codes, numeric profile validation and independent fabrication-rule evaluation. In particular, a supplier minimum below the original project's global minimum is checked independently, so the stricter project rule cannot hide a supplier violation. Original project rules and uploads remain unchanged.
+
+The public recorded Fieldnode example was regenerated using actual native checks on two synthetic revisions. It includes 4 resolved, 32 remaining and 6 new findings, one changed component and four changed routing/pad-net objects, with both a valid and a stale accepted exception. Native identity and comparable rule/engine/profile scope are recorded. This example is not a functional or manufacturing approval. Website uploads, live edits and remote native execution are not simulated.
+
+Desktop, mobile, coverage, repair and comparison renders are included under `screenshots/review-v2-*`. Browser QA used an isolated project directory. Existing local user projects were preserved. No live external AI-provider call, clean-machine installation, Linux/container run or exhaustive CAD-format compatibility claim is made by this release.

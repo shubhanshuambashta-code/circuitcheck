@@ -26,6 +26,9 @@ def init():
         CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY,project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,revision_id TEXT,status TEXT,stage TEXT,error TEXT,created REAL,updated REAL);
         CREATE TABLE IF NOT EXISTS repairs(id TEXT PRIMARY KEY,project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,base_id TEXT,candidate_id TEXT,finding_id TEXT,operation TEXT,state TEXT,created REAL);
         CREATE INDEX IF NOT EXISTS jobs_status ON jobs(status,created);
+        CREATE TABLE IF NOT EXISTS review_notes(id TEXT PRIMARY KEY,project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,finding_id TEXT,revision_id TEXT,kind TEXT,body TEXT,scope TEXT,created REAL);
+        CREATE INDEX IF NOT EXISTS review_notes_finding ON review_notes(project_id,finding_id);
+        CREATE TABLE IF NOT EXISTS explanations(id TEXT PRIMARY KEY,project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,revision_id TEXT,finding_id TEXT,question TEXT,response TEXT,created REAL);
         ''')
 
 def row(table, id):

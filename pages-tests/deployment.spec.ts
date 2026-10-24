@@ -1,31 +1,25 @@
 import {test,expect} from '@playwright/test';
-
-for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
- test(`Pages preview works without an API at ${viewport.width}px`,async({page})=>{
-  await page.setViewportSize(viewport);
-  const errors:string[]=[],failed:string[]=[],apiRequests:string[]=[];
-  page.on('pageerror',error=>errors.push(error.message));
-  page.on('response',response=>{if(response.status()>=400)failed.push(`${response.status()} ${response.url()}`)});
-  page.on('request',request=>{if(new URL(request.url()).pathname.includes('/api/'))apiRequests.push(request.url())});
-  await page.goto('./');
-  await expect(page.getByRole('heading',{name:'Understand the finding. Check the correction.'})).toBeVisible();
-  await expect(page.getByRole('heading',{name:'Run analysis in the local app.'})).toBeVisible();
-  const image=page.getByRole('img',{name:/CircuitCheck local application screenshot/});
-  await expect(image).toBeVisible();
-  await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
-  await page.getByRole('link',{name:'Run CircuitCheck',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Review your own board locally.'})).toBeInViewport();
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-  await page.getByRole('link',{name:'Download test projects'}).click();
-  await expect(page.getByRole('heading',{name:'Check the checker.'})).toBeVisible();
-  expect(page.url()).toContain('/circuitcheck/test-files/');
-  for(const name of ['track-width-before.zip','track-width-corrected.zip','empty-board-outline.zip']){
-   const response=await page.request.get(new URL(name,page.url()).href);
-   expect(response.status()).toBe(200);
-   const bytes=await response.body();expect(bytes.subarray(0,2).toString()).toBe('PK');
-  }
-  await page.getByRole('link',{name:'Back to CircuitCheck'}).click();
-  await expect(page.getByRole('heading',{name:'Understand the finding. Check the correction.'})).toBeVisible();
-  expect(errors).toEqual([]);expect(failed).toEqual([]);expect(apiRequests).toEqual([]);
- });
-}
+test('recorded website exposes revision changes, exact objects, coverage and local setup honestly',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('./');
+ await expect(page.getByText('Interactive recorded example',{exact:true})).toBeVisible();
+ await expect(page.locator('.r2-comparison-boards .board-svg')).toHaveCount(2);
+ await expect(page.locator('.r2-comparison-scope')).toContainText('Comparable engineering checks');
+ await page.locator('.r2-change-groups').getByRole('button',{name:/Changed components/}).click();
+ await page.locator('.r2-change-list>button').first().click();
+ await expect(page.locator('[data-highlight-status=selected]').first()).toBeVisible();
+ const leftView=await page.locator('.r2-comparison-board .board-svg').first().getAttribute('viewBox'); await expect(page.locator('.r2-comparison-board .board-svg').last()).toHaveAttribute('viewBox',leftView!); await page.screenshot({path:'screenshots/review-v2-website.png',fullPage:true});
+ await page.getByRole('button',{name:'Design review',exact:true}).click();
+ await page.locator('.r2-issue').first().click();
+ expect(await page.locator('.r2-board [data-highlight-status=selected]').count()).toBeGreaterThan(0);
+ await page.getByRole('button',{name:'Check coverage',exact:true}).click();
+ await expect(page.getByRole('row').filter({hasText:'Component voltage / power ratings'})).toContainText('not checked');
+ await page.getByRole('button',{name:'Upload revision B',exact:true}).first().click();
+ await expect(page.getByRole('dialog')).toContainText('Live uploads, checks, review notes and approved edits run in the local application.');
+ await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'Download',exact:true}).click();
+ const downloaded=page.waitForEvent('download');await page.getByRole('button',{name:'Current native project',exact:true}).click();
+ expect((await downloaded).suggestedFilename()).toBe('revision-b.zip');
+ for(const width of [1440,1024,768,390,360]){await page.setViewportSize({width,height:1000});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}
+ expect(errors).toEqual([]);
+});

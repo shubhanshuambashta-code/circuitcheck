@@ -1,0 +1,828 @@
+{
+  "$schema": "https://schemas.kicad.org/drc.v1.json",
+  "coordinate_units": "mm",
+  "date": "2026-10-24T20:06:56",
+  "ignored_checks": [
+    {
+      "description": "Footprint has no courtyard defined",
+      "key": "missing_courtyard"
+    },
+    {
+      "description": "Track endpoint not centered on via",
+      "key": "track_not_centered_on_via"
+    },
+    {
+      "description": "Tuning profile track geometries",
+      "key": "tuning_profile_track_geometries"
+    },
+    {
+      "description": "Footprint doesn't match symbol's footprint filters",
+      "key": "footprint_filters_mismatch"
+    },
+    {
+      "description": "Footprint component type doesn't match footprint pads",
+      "key": "footprint_type_mismatch"
+    }
+  ],
+  "included_severities": [
+    "error",
+    "warning",
+    "exclusion"
+  ],
+  "kicad_version": "10.0.7",
+  "schematic_parity": [],
+  "source": "fieldnode.kicad_pcb",
+  "unconnected_items": [
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 65.5,
+            "y": 60.0
+          },
+          "uuid": "f0257bea-7b71-5296-907b-93ddcffb5242"
+        },
+        {
+          "description": "Track [GND] on F.Cu, length 4.2426 mm",
+          "pos": {
+            "x": 63.0,
+            "y": 62.0
+          },
+          "uuid": "45db7f14-efb4-5d12-a225-26f289237097"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 10.0000 mm",
+          "pos": {
+            "x": 66.0,
+            "y": 65.0
+          },
+          "uuid": "e17a5171-c99d-571b-a6b9-4822a7b84a50"
+        },
+        {
+          "description": "Track [GND] on F.Cu, length 10.0000 mm",
+          "pos": {
+            "x": 94.0,
+            "y": 65.0
+          },
+          "uuid": "b046d3f8-383a-50e5-804e-175e7e3ee007"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 7.2000 mm",
+          "pos": {
+            "x": 68.8,
+            "y": 70.08
+          },
+          "uuid": "8dde71fb-2892-5155-8d7a-ee4897c1e594"
+        },
+        {
+          "description": "Track [GND] on F.Cu, length 10.0000 mm",
+          "pos": {
+            "x": 66.0,
+            "y": 65.0
+          },
+          "uuid": "e17a5171-c99d-571b-a6b9-4822a7b84a50"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 77.5,
+            "y": 80.0
+          },
+          "uuid": "b3d7b51d-3221-5864-a7e2-ab0941c41009"
+        },
+        {
+          "description": "Track [GND] on F.Cu, length 15.0000 mm",
+          "pos": {
+            "x": 72.0,
+            "y": 82.0
+          },
+          "uuid": "1e63b2de-8742-5f21-9122-a1d45ee19a3a"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 77.5,
+            "y": 80.0
+          },
+          "uuid": "b3d7b51d-3221-5864-a7e2-ab0941c41009"
+        },
+        {
+          "description": "Track [GND] on F.Cu, length 7.2000 mm",
+          "pos": {
+            "x": 68.8,
+            "y": 70.08
+          },
+          "uuid": "8dde71fb-2892-5155-8d7a-ee4897c1e594"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 7.2000 mm",
+          "pos": {
+            "x": 91.2,
+            "y": 70.08
+          },
+          "uuid": "fb740c5e-3499-5ebf-9c97-e7eae762b1e7"
+        },
+        {
+          "description": "Track [GND] on F.Cu, length 10.0000 mm",
+          "pos": {
+            "x": 94.0,
+            "y": 65.0
+          },
+          "uuid": "b046d3f8-383a-50e5-804e-175e7e3ee007"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [+3V3] on F.Cu, length 6.5000 mm",
+          "pos": {
+            "x": 69.5,
+            "y": 71.35
+          },
+          "uuid": "ae2b0cf6-419e-50da-b755-1cf53103d699"
+        },
+        {
+          "description": "Track [+3V3] on F.Cu, length 9.3000 mm",
+          "pos": {
+            "x": 66.7,
+            "y": 66.27
+          },
+          "uuid": "77fc5774-b7ba-53c5-bd59-643d2b4cdb74"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [+3V3] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 77.5,
+            "y": 60.0
+          },
+          "uuid": "a05bed1d-4bb6-5ce2-9301-2df3dcc092d3"
+        },
+        {
+          "description": "Track [+3V3] on F.Cu, length 9.3000 mm",
+          "pos": {
+            "x": 66.7,
+            "y": 66.27
+          },
+          "uuid": "77fc5774-b7ba-53c5-bd59-643d2b4cdb74"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [+3V3] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 77.5,
+            "y": 60.0
+          },
+          "uuid": "a05bed1d-4bb6-5ce2-9301-2df3dcc092d3"
+        },
+        {
+          "description": "Track [+3V3] on F.Cu, length 9.3000 mm",
+          "pos": {
+            "x": 93.3,
+            "y": 66.27
+          },
+          "uuid": "2e2d837f-57ad-5c36-b83e-aa3d9dcda633"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [+3V3] on F.Cu, length 6.5000 mm",
+          "pos": {
+            "x": 90.5,
+            "y": 71.35
+          },
+          "uuid": "643e7529-cf28-5f02-9f91-fb25a21e98ed"
+        },
+        {
+          "description": "Track [+3V3] on F.Cu, length 9.3000 mm",
+          "pos": {
+            "x": 93.3,
+            "y": 66.27
+          },
+          "uuid": "2e2d837f-57ad-5c36-b83e-aa3d9dcda633"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [+3V3] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 89.5,
+            "y": 80.0
+          },
+          "uuid": "28a8879b-019e-5f31-8c27-b8b8c02d89fe"
+        },
+        {
+          "description": "Track [+3V3] on F.Cu, length 4.4969 mm",
+          "pos": {
+            "x": 93.5,
+            "y": 74.7
+          },
+          "uuid": "924b63fc-b72d-57fd-a25a-104086e1568f"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [SDA] on F.Cu, length 8.6000 mm",
+          "pos": {
+            "x": 67.4,
+            "y": 67.54
+          },
+          "uuid": "579a34da-2e6d-5a61-a5cd-c082c8bcdaa9"
+        },
+        {
+          "description": "Pad 7 [SDA] of U1 on F.Cu",
+          "pos": {
+            "x": 76.0,
+            "y": 72.62
+          },
+          "uuid": "0756f1bd-b26d-51bb-b296-ab45498f3a51"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [SDA] on F.Cu, length 8.6000 mm",
+          "pos": {
+            "x": 92.6,
+            "y": 67.54
+          },
+          "uuid": "f2d609b1-30a0-5bfc-9493-c7ff4dd12f67"
+        },
+        {
+          "description": "Track [SDA] on F.Cu, length 8.6000 mm",
+          "pos": {
+            "x": 67.4,
+            "y": 67.54
+          },
+          "uuid": "579a34da-2e6d-5a61-a5cd-c082c8bcdaa9"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Pad 15 [SDA] of U1 on F.Cu",
+          "pos": {
+            "x": 84.0,
+            "y": 72.62
+          },
+          "uuid": "4fd677b9-0df0-53c2-9e86-7a1b390ae023"
+        },
+        {
+          "description": "Track [SDA] on F.Cu, length 8.6000 mm",
+          "pos": {
+            "x": 92.6,
+            "y": 67.54
+          },
+          "uuid": "f2d609b1-30a0-5bfc-9493-c7ff4dd12f67"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [SDA] on F.Cu, length 3.0351 mm",
+          "pos": {
+            "x": 95.6,
+            "y": 67.08
+          },
+          "uuid": "0ea54375-b1b7-5b87-b469-2f4fb2bf2d48"
+        },
+        {
+          "description": "Track [SDA] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 89.5,
+            "y": 60.0
+          },
+          "uuid": "f659bd1a-d307-5f4c-af74-8a58b38e65ef"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [SCL] on F.Cu, length 3.0000 mm",
+          "pos": {
+            "x": 65.5,
+            "y": 80.0
+          },
+          "uuid": "dae4a843-a669-5881-b86f-ef863200a58f"
+        },
+        {
+          "description": "Pad 8 [SCL] of U1 on F.Cu",
+          "pos": {
+            "x": 76.0,
+            "y": 73.89
+          },
+          "uuid": "51d040c1-cbd1-528b-b5bf-95e844b1f86f"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Pad 8 [SCL] of U1 on F.Cu",
+          "pos": {
+            "x": 76.0,
+            "y": 73.89
+          },
+          "uuid": "51d040c1-cbd1-528b-b5bf-95e844b1f86f"
+        },
+        {
+          "description": "Track [SCL] on F.Cu, length 7.9000 mm",
+          "pos": {
+            "x": 68.1,
+            "y": 68.81
+          },
+          "uuid": "fc9c716f-538c-5e60-a6ec-608cb3ebec0c"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [SCL] on F.Cu, length 7.9000 mm",
+          "pos": {
+            "x": 91.9,
+            "y": 68.81
+          },
+          "uuid": "f0870c90-d108-5d17-9adc-381fca7ffc6a"
+        },
+        {
+          "description": "Pad 16 [SCL] of U1 on F.Cu",
+          "pos": {
+            "x": 84.0,
+            "y": 73.89
+          },
+          "uuid": "c45366ed-158b-5311-955c-fb3bdf501f30"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    },
+    {
+      "description": "Missing connection between items",
+      "items": [
+        {
+          "description": "Track [SCL] on F.Cu, length 7.9000 mm",
+          "pos": {
+            "x": 91.9,
+            "y": 68.81
+          },
+          "uuid": "f0870c90-d108-5d17-9adc-381fca7ffc6a"
+        },
+        {
+          "description": "Track [SCL] on F.Cu, length 7.9000 mm",
+          "pos": {
+            "x": 68.1,
+            "y": 68.81
+          },
+          "uuid": "fc9c716f-538c-5e60-a6ec-608cb3ebec0c"
+        }
+      ],
+      "severity": "warning",
+      "type": "unconnected_items"
+    }
+  ],
+  "violations": [
+    {
+      "description": "Track width (board setup constraints min width 0.2500 mm; actual 0.1500 mm)",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 15.0000 mm",
+          "pos": {
+            "x": 72.0,
+            "y": 82.0
+          },
+          "uuid": "1e63b2de-8742-5f21-9122-a1d45ee19a3a"
+        }
+      ],
+      "severity": "error",
+      "type": "track_width"
+    },
+    {
+      "description": "Track has unconnected end",
+      "items": [
+        {
+          "description": "Track [GND] on F.Cu, length 15.0000 mm",
+          "pos": {
+            "x": 72.0,
+            "y": 82.0
+          },
+          "uuid": "1e63b2de-8742-5f21-9122-a1d45ee19a3a"
+        }
+      ],
+      "severity": "warning",
+      "type": "track_dangling"
+    },
+    {
+      "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)",
+      "items": [
+        {
+          "description": "PCB text 'GND' on f.silkscreen",
+          "pos": {
+            "x": 70.0,
+            "y": 82.0
+          },
+          "uuid": "ec93a522-a087-5b24-b3c7-c7ea77706b95"
+        }
+      ],
+      "severity": "warning",
+      "type": "text_height"
+    },
+    {
+      "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)",
+      "items": [
+        {
+          "description": "PCB text '3V3' on f.silkscreen",
+          "pos": {
+            "x": 61.0,
+            "y": 59.0
+          },
+          "uuid": "268483c6-70c1-56e1-bef7-03b5a7dd4d96"
+        }
+      ],
+      "severity": "warning",
+      "type": "text_height"
+    },
+    {
+      "description": "Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)",
+      "items": [
+        {
+          "description": "PCB text 'SDA / SCL' on f.silkscreen",
+          "pos": {
+            "x": 100.0,
+            "y": 79.0
+          },
+          "uuid": "2a90ee10-6041-5616-94a7-6eb4247c6a75"
+        }
+      ],
+      "severity": "warning",
+      "type": "text_height"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R1 on f.silkscreen",
+          "pos": {
+            "x": 66.3,
+            "y": 59.2
+          },
+          "uuid": "c86849e0-8fbd-5d68-850e-8683442dfc15"
+        },
+        {
+          "description": "Pad 2 [GND] of R1 on F.Cu",
+          "pos": {
+            "x": 68.5,
+            "y": 60.0
+          },
+          "uuid": "fc3b5de4-74ac-50cd-9b51-462dfb8929f3"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R1 on f.silkscreen",
+          "pos": {
+            "x": 66.3,
+            "y": 59.2
+          },
+          "uuid": "c86849e0-8fbd-5d68-850e-8683442dfc15"
+        },
+        {
+          "description": "Pad 1 [GND] of R1 on F.Cu",
+          "pos": {
+            "x": 65.5,
+            "y": 60.0
+          },
+          "uuid": "7c7e9667-e94a-5232-80d3-11e9b0ff7a80"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R4 on f.silkscreen",
+          "pos": {
+            "x": 66.3,
+            "y": 79.2
+          },
+          "uuid": "203bf6ea-ef92-58c0-b1bd-cfa7dab973f5"
+        },
+        {
+          "description": "Pad 2 [SCL] of R4 on F.Cu",
+          "pos": {
+            "x": 68.5,
+            "y": 80.0
+          },
+          "uuid": "4d4d1c5c-cbb9-578b-8604-c5a325cf775c"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R4 on f.silkscreen",
+          "pos": {
+            "x": 66.3,
+            "y": 79.2
+          },
+          "uuid": "203bf6ea-ef92-58c0-b1bd-cfa7dab973f5"
+        },
+        {
+          "description": "Pad 1 [SCL] of R4 on F.Cu",
+          "pos": {
+            "x": 65.5,
+            "y": 80.0
+          },
+          "uuid": "58c5e13b-7ebb-57fc-a4a9-f1aa95918383"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R5 on f.silkscreen",
+          "pos": {
+            "x": 78.3,
+            "y": 79.2
+          },
+          "uuid": "3a604975-04eb-5ec4-902c-b1990ec13556"
+        },
+        {
+          "description": "Pad 2 [GND] of R5 on F.Cu",
+          "pos": {
+            "x": 80.5,
+            "y": 80.0
+          },
+          "uuid": "41d71ff8-f2cc-5330-b6ca-b758aaab5da2"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R5 on f.silkscreen",
+          "pos": {
+            "x": 78.3,
+            "y": 79.2
+          },
+          "uuid": "3a604975-04eb-5ec4-902c-b1990ec13556"
+        },
+        {
+          "description": "Pad 1 [GND] of R5 on F.Cu",
+          "pos": {
+            "x": 77.5,
+            "y": 80.0
+          },
+          "uuid": "da005bc2-ff52-51f7-84a0-9d24a2a94d79"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R6 on f.silkscreen",
+          "pos": {
+            "x": 90.3,
+            "y": 79.2
+          },
+          "uuid": "f5c729cb-b66d-560c-bd6e-fd35c8ff05c7"
+        },
+        {
+          "description": "Pad 2 [+3V3] of R6 on F.Cu",
+          "pos": {
+            "x": 92.5,
+            "y": 80.0
+          },
+          "uuid": "ccd8a711-7ed9-5636-8829-dee4bc6909bf"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R6 on f.silkscreen",
+          "pos": {
+            "x": 90.3,
+            "y": 79.2
+          },
+          "uuid": "f5c729cb-b66d-560c-bd6e-fd35c8ff05c7"
+        },
+        {
+          "description": "Pad 1 [+3V3] of R6 on F.Cu",
+          "pos": {
+            "x": 89.5,
+            "y": 80.0
+          },
+          "uuid": "68724cc4-2de4-56cf-9b3e-49c71717bfd1"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R2 on f.silkscreen",
+          "pos": {
+            "x": 78.3,
+            "y": 59.2
+          },
+          "uuid": "37847324-fe85-5617-afa8-3f869a7befa3"
+        },
+        {
+          "description": "Pad 1 [+3V3] of R2 on F.Cu",
+          "pos": {
+            "x": 77.5,
+            "y": 60.0
+          },
+          "uuid": "5aa069d7-8b08-587b-bffe-4777f8871cf4"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R2 on f.silkscreen",
+          "pos": {
+            "x": 78.3,
+            "y": 59.2
+          },
+          "uuid": "37847324-fe85-5617-afa8-3f869a7befa3"
+        },
+        {
+          "description": "Pad 2 [+3V3] of R2 on F.Cu",
+          "pos": {
+            "x": 80.5,
+            "y": 60.0
+          },
+          "uuid": "8f88a5d0-0fe3-55c3-9082-4dea3177f3dc"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R3 on f.silkscreen",
+          "pos": {
+            "x": 90.3,
+            "y": 59.2
+          },
+          "uuid": "3d970a7b-6dab-515c-89fe-2644a8cc34bf"
+        },
+        {
+          "description": "Pad 2 [SDA] of R3 on F.Cu",
+          "pos": {
+            "x": 92.5,
+            "y": 60.0
+          },
+          "uuid": "6a82bffb-5c75-5296-8b46-3a76a399bce9"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    },
+    {
+      "description": "Silkscreen clipped by solder mask",
+      "items": [
+        {
+          "description": "Rectangle of R3 on f.silkscreen",
+          "pos": {
+            "x": 90.3,
+            "y": 59.2
+          },
+          "uuid": "3d970a7b-6dab-515c-89fe-2644a8cc34bf"
+        },
+        {
+          "description": "Pad 1 [SDA] of R3 on F.Cu",
+          "pos": {
+            "x": 89.5,
+            "y": 60.0
+          },
+          "uuid": "a1c6c098-4a48-5a84-8cba-53a75ffcb189"
+        }
+      ],
+      "severity": "warning",
+      "type": "silk_over_copper"
+    }
+  ],
+  "recording_note": "Only the host source-path metadata is redacted. Native findings and measurements are unchanged."
+}

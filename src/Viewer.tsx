@@ -1,21 +1,24 @@
 import {useEffect,useId,useRef,useState} from 'react';
 import {Maximize,Minus,Plus,MousePointer2,Hand,Layers,Eye,EyeOff,Crosshair,FileUp,LoaderCircle,CircuitBoard} from 'lucide-react';
-import {artifactUrl,type Preview,type Finding} from './api';
+import {artifactUrl,type Preview,type Finding,type Geometry,type BoardObject} from './api';
 
-interface Props {pid?:string;rid?:string;preview?:Preview;finding?:Finding;busy?:string;onUpload:()=>void;onSample:()=>void;onSelect:(id:string)=>void;findings:Finding[];resetKey?:string;onCoverage?:()=>void}
-export default function Viewer({pid,rid,preview,finding,busy,onUpload,onSample,onSelect,findings,resetKey,onCoverage}:Props){
+interface Props {pid?:string;rid?:string;preview?:Preview;finding?:Finding;busy?:string;onUpload:()=>void;onSample:()=>void;onSelect:(id:string)=>void;findings:Finding[];resetKey?:string;onCoverage?:()=>void;geometry?:Geometry;highlightIds?:string[];overlays?:{object:BoardObject;status:string}[];focusPoints?:number[][];sharedBoundsMm?:number[]}
+export default function Viewer({pid,rid,preview,finding,busy,onUpload,onSample,onSelect,findings,resetKey,onCoverage,geometry,highlightIds,overlays=[],focusPoints,sharedBoundsMm}:Props){
  const [zoom,setZoom]=useState(1),[pan,setPan]=useState([0,0]),[mode,setMode]=useState('select'),[markers,setMarkers]=useState(true),[layers,setLayers]=useState(false),[visible,setVisible]=useState<Record<string,boolean>>({});
  const layerId=useId(),layerButton=useRef<HTMLButtonElement>(null);
  const ref=useRef<SVGSVGElement>(null),drag=useRef<{x:number;y:number;pan:number[]}|null>(null);
  const map=preview?.mapping;
- const bounds=preview?.bounds_mm;
+ const actualBounds=preview?.bounds_mm;
+ const bounds=sharedBoundsMm||actualBounds;
  const vb=preview?.view_box||[0,0,297,210];
- const full= bounds&&map ? [(bounds[0]-5)*map.scale_x,(bounds[1]-5)*map.scale_y,(bounds[2]-bounds[0]+10)*map.scale_x,(bounds[3]-bounds[1]+10)*map.scale_y] : vb;
+ const full= bounds&&map ? [(bounds[0]-5)*map.scale_x+map.offset_x,(bounds[1]-5)*map.scale_y+map.offset_y,(bounds[2]-bounds[0]+10)*map.scale_x,(bounds[3]-bounds[1]+10)*map.scale_y] : vb;
+ const highlighted=geometry?.objects.filter(o=>(highlightIds||finding?.board_object_ids||[]).includes(o.id))||[];
  const view=[full[0]+full[2]*(1-1/zoom)/2+pan[0],full[1]+full[3]*(1-1/zoom)/2+pan[1],full[2]/zoom,full[3]/zoom];
  const fit=()=>{setZoom(1);setPan([0,0])};
  useEffect(()=>{fit();setVisible({});setLayers(false)},[resetKey]);
  useEffect(()=>{const f=(e:KeyboardEvent)=>{if((e.target as HTMLElement).matches('input,textarea'))return;if(e.key.toLowerCase()==='f')fit()};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f)},[]);
- function focus(){if(finding?.position&&map){setZoom(2.4);setPan([(finding.position.x*map.scale_x-(full[0]+full[2]/2)),(finding.position.y*map.scale_y-(full[1]+full[3]/2))])}}
+ function focus(){if(!map)return;const pts=focusPoints?.length?focusPoints:highlighted.flatMap(o=>o.points);if(pts.length){const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const x=(Math.min(...xs)+Math.max(...xs))/2,y=(Math.min(...ys)+Math.max(...ys))/2;const extent=Math.max((Math.max(...xs)-Math.min(...xs))*map.scale_x/full[2],(Math.max(...ys)-Math.min(...ys))*map.scale_y/full[3]);setZoom(Math.max(1,Math.min(5,.55/Math.max(.1,extent))));setPan([x*map.scale_x+map.offset_x-(full[0]+full[2]/2),y*map.scale_y+map.offset_y-(full[1]+full[3]/2)])}else if(finding?.position&&finding.file===preview?.file){setZoom(2.4);setPan([finding.position.x*map.scale_x+map.offset_x-(full[0]+full[2]/2),finding.position.y*map.scale_y+map.offset_y-(full[1]+full[3]/2)])}}
+ useEffect(()=>{if(finding||highlightIds?.length||focusPoints?.length)focus()},[finding?.id,highlightIds?.join(','),preview?.artifact,focusPoints?.flat().join(',')]);
  useEffect(()=>{if(!layers)return;const close=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();setLayers(false);layerButton.current?.focus()}};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[layers]);
  const layerFiles=(preview as Preview&{layers?:{name:string;artifact:string}[]})?.layers;
  return <div className="viewer-shell">
@@ -30,13 +33,16 @@ export default function Viewer({pid,rid,preview,finding,busy,onUpload,onSample,o
       onPointerMove={e=>{if(drag.current&&ref.current){const rect=ref.current.getBoundingClientRect();const ratio=Math.max(view[2]/rect.width,view[3]/rect.height);setPan([drag.current.pan[0]-(e.clientX-drag.current.x)*ratio,drag.current.pan[1]-(e.clientY-drag.current.y)*ratio])}}}
       onPointerUp={()=>drag.current=null} onPointerCancel={()=>drag.current=null}>
       {layerFiles?.length?layerFiles.filter(l=>visible[l.name]!==false).map(l=><image key={l.name} href={artifactUrl(pid,rid,l.artifact)} x={vb[0]} y={vb[1]} width={vb[2]} height={vb[3]}/>):<image href={artifactUrl(pid,rid,preview.artifact)} x={vb[0]} y={vb[1]} width={vb[2]} height={vb[3]}/>}
+      {map&&<g transform={`translate(${map.offset_x} ${map.offset_y}) scale(${map.scale_x} ${map.scale_y})`} className="resolved-board-objects" aria-label="UUID-resolved object highlights">
+       {[...overlays,...highlighted.map(object=>({object,status:'selected'}))].map(({object:o,status},i)=>{const w=Math.max(.12,(full[2]/map.scale_x)*.004/Math.sqrt(zoom));const points=o.points.map(p=>p.join(',')).join(' ');return <g key={`${o.id}-${status}-${i}`} data-object-id={o.id} data-highlight-status={status} className={`object-highlight status-${status}`}><title>{[o.kind,o.reference,o.pad?`pad ${o.pad}`:'',o.net,o.envelope?'object envelope':'native path',o.id].filter(Boolean).join(' · ')}</title>{o.shape==='circle'?<circle cx={o.points[0][0]} cy={o.points[0][1]} r={Math.max(o.radius||0,w)} strokeWidth={w}/>:o.shape==='polygon'?<polygon points={points} strokeWidth={w}/>:o.shape==='point'?<circle cx={o.points[0][0]} cy={o.points[0][1]} r={w*3} strokeWidth={w}/>:<polyline points={points} strokeWidth={Math.max(o.width||0,w*2)}/>}</g>})}
+      </g>}
       {markers&&map&&findings.filter(f=>f.position&&f.file===preview.file&&!f.excluded).sort((a,b)=>Number(a.id===finding?.id)-Number(b.id===finding?.id)).map((f)=>{const i=findings.findIndex(x=>x.id===f.id);const x=f.position!.x*map.scale_x+map.offset_x,y=f.position!.y*map.scale_y+map.offset_y;const r=full[2]*.012/Math.sqrt(zoom);const selected=f.id===finding?.id;return <g key={f.id} className={`finding-marker ${selected?'selected':''}`} tabIndex={0} role="button" aria-pressed={selected} aria-label={`${f.title}, finding ${i+1}`} onClick={()=>onSelect(f.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(f.id)}}}><circle cx={x} cy={y} r={r*(selected?2.3:1.4)} fill={selected?'#f8c66a22':'transparent'} stroke={selected?'#f8c66a':'none'} strokeWidth={r*.12}/><circle cx={x} cy={y} r={r} fill={selected?'#f8c66a':'#bb765d'} stroke="#172328" strokeWidth={r*.25}/><text x={x} y={y+r*.35} textAnchor="middle" fontSize={r*1.1} fill="#172328" fontFamily="monospace" fontWeight="600">{i+1}</text></g>})}
     </svg>
-    {finding?.position&&map&&<button className="locate-button" onClick={focus}><Crosshair size={14}/> Locate selected finding</button>}
+    {(finding?.position||highlighted.length>0)&&map&&<button className="locate-button" onClick={focus}><Crosshair size={14}/> Locate selected finding</button>}
     <div className="canvas-bottom"><span>mm <span className="canvas-cross">✛</span> {finding?.position?`X ${finding.position.x.toFixed(2)}   Y ${finding.position.y.toFixed(2)}`:'KiCad coordinates'}</span><span>Scroll to zoom · Alt + drag to pan</span></div>
    </>:<div className="empty-canvas"><div className="empty-board-icon"><CircuitBoard size={56} strokeWidth={1}/></div><p className="eyebrow">{pid?'NATIVE DESIGN PREVIEW':'YOUR DESIGN, IN VIEW'}</p><h2>{pid?(busy?'Preparing design preview':'Preview unavailable'):'Start a design review'}</h2><p>{pid?(busy?'The worker is reading and exporting this design.':'No native export is available for this view. Review detected files and check coverage.') : <>Upload a native KiCad project to inspect the layout,<br className="desktop-only"/> check design rules and review the evidence.</>}</p>{!pid?<><button className="primary" onClick={onUpload}><FileUp size={16}/> Upload project</button><button className="sample-link" onClick={onSample}>Explore the example project <span>→</span></button><span className="format-note">.kicad_pcb · .kicad_sch · project .zip</span></>:!busy&&onCoverage?<button className="sample-link" onClick={onCoverage}>Review check coverage <span>→</span></button>:null}</div>}
    {busy&&<div className="canvas-progress" role="status"><LoaderCircle className="spin" size={16}/>{busy}<span>Checks run in the background</span></div>}
   </div>
-  <div className="viewer-caption"><span><span className="tiny-dot teal"/>{preview?'KiCad SVG export':'Native design preview'}</span><span>{preview?.kind==='pcb'&&bounds?`${(bounds[2]-bounds[0]).toFixed(1)} × ${(bounds[3]-bounds[1]).toFixed(1)} mm`:'2D workspace'}<span className="caption-divider">|</span>{map?'Mapped coordinates':preview?'Location mapping unavailable':'Original files preserved'}</span></div>
+  <div className="viewer-caption"><span><span className="tiny-dot teal"/>{preview?'KiCad SVG export':'Native design preview'}</span><span>{preview?.kind==='pcb'&&actualBounds?`${(actualBounds[2]-actualBounds[0]).toFixed(1)} × ${(actualBounds[3]-actualBounds[1]).toFixed(1)} mm`:'2D workspace'}<span className="caption-divider">|</span>{map?'Mapped coordinates':preview?'Location mapping unavailable':'Original files preserved'}</span></div>
  </div>
 }

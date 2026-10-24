@@ -40,7 +40,7 @@ async def explain(question, finding):
         elif any(x in lower for x in ('resolve','change','correct','fix')):
             first=finding['suggestion']
         else: first=finding['explanation']
-        return {'provider':'deterministic','answer':first+' Evidence: '+finding['evidence']+' '+finding['suggestion'],
+        return {'provider':'deterministic','explanation_engine':'deterministic-evidence-1.0','answer':first+' Evidence: '+finding['evidence']+' '+finding['suggestion'],
                 'facts':[finding['evidence']],'hypotheses':[],
                 'missing_information':[] if finding['repair'] else ['Automatic repair is unavailable for this finding.'],
                 'object_ids':finding['object_ids']}
@@ -57,5 +57,5 @@ async def explain(question, finding):
         response.raise_for_status()
         answer=Answer.model_validate_json(response.json()['choices'][0]['message']['content'])
         validate_evidence(answer,context)
-        return {'provider':'model','requires_review':True,**answer.model_dump()}
+        return {'provider':'model','requires_review':True,'explanation_engine':response.json().get('model') or os.getenv('AI_MODEL','gpt-4.1-mini'),'adapter':'evidence-explainer-1.1',**answer.model_dump()}
 

@@ -1,38 +1,28 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
 
-test('repair action stays visible and detected files link to coverage',async({page})=>{
- await page.setViewportSize({width:1440,height:900});
- await page.goto('/');
- await page.keyboard.press('Tab');
- await expect(page.getByRole('link',{name:'Skip to design review'})).toBeFocused();
- await page.keyboard.press('Enter');
- await expect(page.locator('#review-main')).toBeFocused();
- await page.getByRole('button',{name:'Upload project',exact:true}).first().click();
- await page.locator('input[type=file]').setInputFiles(['drc.kicad_pcb','drc.kicad_pro'].map(file=>path.resolve('fixtures/drc',file)));
- await expect(page.getByText('Checks completed',{exact:true})).toBeVisible({timeout:60000});
- const action=page.getByRole('button',{name:'Preview change',exact:true});
- await expect(action).toBeInViewport({ratio:1});
- const before=await action.boundingBox();
- await page.locator('.detail-scroll').evaluate(el=>{el.scrollTop=el.scrollHeight});
- expect((await action.boundingBox())?.y).toBe(before?.y);
- await expect(action).toBeInViewport({ratio:1});
- await page.getByRole('button',{name:'View 2 project files'}).click();
- await expect(page.getByRole('dialog')).toContainText('drc.kicad_pcb');
- await expect(page.getByRole('dialog')).toContainText('drc.kicad_pro');
- const dialog=await page.getByRole('dialog').boundingBox();
- expect(Math.abs(dialog!.x+dialog!.width/2-720)).toBeLessThan(2);
- expect(Math.abs(dialog!.y+dialog!.height/2-450)).toBeLessThan(2);
- await page.getByRole('button',{name:'View check coverage'}).click();
+test('responsive board, exact object selection, layers and accessible dialogs',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:'New project',exact:true}).click();
+ await page.locator('input[type=file]').first().setInputFiles(['fieldnode.kicad_pcb','fieldnode.kicad_pro'].map(f=>path.resolve('fixtures/fieldnode',f)));
  await expect(page.getByRole('dialog')).toHaveCount(0);
- await expect(page.locator('.coverage-list')).toContainText('DRC');
- await page.getByRole('button',{name:'Layers',exact:true}).click();
- await expect(page.getByRole('button',{name:'Layers',exact:true})).toHaveAttribute('aria-expanded','true');
- await page.keyboard.press('Escape');
- await expect(page.getByRole('button',{name:'Layers',exact:true})).toHaveAttribute('aria-expanded','false');
- await expect(page.getByRole('button',{name:'Layers',exact:true})).toBeFocused();
- await page.setViewportSize({width:390,height:844});
- await page.locator('.mobile-panel-tabs').getByRole('button',{name:'Details',exact:true}).click();
- await expect(action).toBeInViewport({ratio:1});
- await expect(page.locator('body')).toHaveJSProperty('scrollWidth',390);
+ await expect(page.getByText('Engineering checks completed',{exact:true})).toBeVisible({timeout:60000});
+ expect(await page.locator('.r2-board [data-highlight-status=selected]').count()).toBeGreaterThan(0);
+ await page.getByRole('button',{name:'Layers',exact:true}).click();await page.getByLabel('F.Cu',{exact:true}).uncheck();
+ await expect(page.locator('.board-svg image')).toHaveCount(3); await page.getByLabel('F.Cu',{exact:true}).check();
+ await page.keyboard.press('Escape');await expect(page.getByRole('button',{name:'Layers',exact:true})).toBeFocused();
+ await page.screenshot({path:'screenshots/review-v2-desktop.png',fullPage:true});
+ for(const width of [1440,1024,768,390,360]){
+  await page.setViewportSize({width,height:1000});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+ }
+ await page.locator('.r2-mobile-tabs').getByRole('button',{name:'Issues',exact:true}).click();
+ await expect(page.getByLabel('Search findings, nets or components')).toBeVisible();
+ await page.getByLabel('Search findings, nets or components').fill('track width');
+ await page.locator('.r2-issue').first().click();
+ await expect(page.locator('.r2-board')).toBeVisible();
+ await page.getByRole('button',{name:'Inspect evidence',exact:true}).click();
+ await expect(page.locator('.r2-inspector h2')).toHaveText('Track width below configured minimum');
+ await page.screenshot({path:'screenshots/review-v2-mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'New project',exact:true}).click();
+ await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
 });

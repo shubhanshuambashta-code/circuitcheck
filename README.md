@@ -2,7 +2,27 @@
 
 Review a KiCad PCB project before sending it for fabrication. CircuitCheck runs native KiCad checks, shows each reported problem on the board, and lets you preview a supported correction in a separate copy before applying it and checking again.
 
-![CircuitCheck board review workspace](screenshots/board-only-workspace.png)
+![CircuitCheck engineering review workspace](public/images/review-v2-workspace.png)
+
+## Engineering review v0.2
+
+- The local app and public website share the same review interface. The website is an **interactive recorded example**, clearly labelled; live uploads and edits require the local engine.
+- Click a finding to zoom to UUID-resolved tracks, pads, components or reported locations. Pads/components use explicit object envelopes. Net highlighting follows stored net assignments. Unavailable mappings are labelled and never guessed; schematic findings cross-probe only unambiguous matching component references/pads.
+- Confirmed native rule violations, evidence-supported review suggestions and unconfirmed potential concerns are separate categories. AI explains selected evidence and does not establish engineering violations.
+- Coverage lists evaluated checks, findings, ignored rules, failures, missing dependencies and checks that were not performed. There is no overall safety score. Rule/profile fingerprints, source hashes, KiCad, normalizer, geometry and explanation-engine versions are visible.
+- **Upload revision B** into the current project to compare resolved, remaining and new findings, moved/changed components and physical routing/pad-net changes. Review comments and accepted exceptions persist. Exceptions retain the native finding and require re-review when their evidence or scope changes.
+- Rule/profile/engine/coverage changes or unstable object identities prevent a disappearance from being labelled a verified fix. UUID rewrites appear as added/removed objects. Physical routing comparison does not infer circuit intent or establish logical connectivity equivalence.
+- Select the `PCBWAY-STANDARD-BASELINE` published snapshot, import a numeric JSON profile, enter custom minimum dimensions, or include native `.kicad_dru` rules in the project ZIP. Manufacturer order references are stored as metadata; unknown codes do not fetch or invent private order constraints. Presets are scoped published minima, not full manufacturer approval.
+- Supported track-width fixes follow **copy → native recheck → review → explicit approval → apply → fresh recheck → download**. Other findings show a specific manual action in KiCad and can be re-uploaded as a revision.
+- Readable HTML and JSON reports retain coverage, provenance and review decisions; JSON also records explanation history and the actual explanation-model identifier returned by the provider when available.
+
+JSON fabrication profile example (all dimensions in mm):
+
+```json
+{"code":"CUSTOM","name":"My fabrication specification","version":"1","source":"Approved drawing / quote reference","constraints":{"track_width":0.2,"clearance":0.2,"hole_size":0.3}}
+```
+
+Supported numeric constraints: `track_width`, `clearance`, `hole_size`, `annular_width`, `edge_clearance`. A separate native KiCad DRC pass evaluates these in a disposable copy while preserving the original project rules and original files.
 
 ## What it does
 
@@ -56,7 +76,7 @@ Linux/macOS startup scripts are supplied but were not executed here. Do not copy
 
 ## GitHub Pages preview
 
-The published site is a static product preview with known-answer test downloads and local startup instructions. GitHub Pages cannot execute FastAPI, SQLite jobs or native KiCad. Uploading a design and running analysis require the local application described above. This is not a hosted analysis service.
+The published site provides an interactive replay of two real native KiCad runs on an original synthetic fixture, with object highlighting, revision comparisons, coverage, review history and downloadable native project versions. Its persistent banner identifies recorded results. GitHub Pages cannot execute FastAPI, SQLite jobs or native KiCad; live uploads, notes and approved edits require the local application.
 
 In **Settings > Pages**, set **Source** to **GitHub Actions**. `.github/workflows/pages.yml` installs locked frontend dependencies, runs `npm run build:pages`, and deploys only `dist-pages/`. The Pages build uses `/circuitcheck/` as its base; `npm run build` still produces the working local application in `dist/` with `/` as its base. Do not publish the source folder directly: browsers cannot execute the TypeScript entry point without Vite's build step.
 

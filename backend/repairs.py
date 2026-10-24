@@ -31,6 +31,8 @@ def preview(project_id,finding_id):
         prefix=b'\xef\xbb\xbf' if file.read_bytes().startswith(b'\xef\xbb\xbf') else b''
         file.write_bytes(prefix+changed.encode('utf-8'))
         manifest=inspect(target,db.decode(base['manifest'])['root'])
+        profile=db.decode(base['manifest']).get('rule_profile')
+        if profile:manifest['rule_profile']=profile
         now=time.time()
         with db.connect() as c:
             c.execute('INSERT INTO revisions VALUES(?,?,?,?,?,?,?)',(candidate,project_id,base['id'],fingerprint(target),json.dumps(manifest),None,now))

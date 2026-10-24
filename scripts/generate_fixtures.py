@@ -21,9 +21,9 @@ def text(value,x,y,size=1):
 
 def footprint(ref,x,y,pads,body=(-1.5,-1.5,1.5,1.5)):
     s=f'(footprint "{ref}" (layer "F.Cu") (uuid "{uid(ref)}") (at {x} {y})\n'
-    s+=f'(property "Reference" "{ref}" (at 0 -2.4 0) (layer "F.SilkS") (effects (font (size 0.9 0.9) (thickness 0.13))))\n'
-    s+=f'(property "Value" "Review fixture" (at 0 2.4 0) (layer "F.Fab") hide (effects (font (size 1 1) (thickness 0.15))))\n'
-    s+=f'(fp_rect (start {body[0]} {body[1]}) (end {body[2]} {body[3]}) (stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS"))\n'
+    s+=f'(property "Reference" "{ref}" (at 0 -2.4 0) (layer "F.SilkS") (uuid "{uid(ref+"-reference")}") (effects (font (size 0.9 0.9) (thickness 0.13))))\n'
+    s+=f'(property "Value" "Review fixture" (at 0 2.4 0) (layer "F.Fab") (uuid "{uid(ref+"-value")}") hide (effects (font (size 1 1) (thickness 0.15))))\n'
+    s+=f'(fp_rect (start {body[0]} {body[1]}) (end {body[2]} {body[3]}) (stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid "{uid(ref+"-body")}"))\n'
     for i,(px,py,net) in enumerate(pads,1):
         s+=f'(pad "{i}" smd roundrect (at {px} {py}) (size 1.5 0.8) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.2) (net {net} "{["","GND","+3V3","SDA","SCL"][net]}") (uuid "{uid(ref+str(i))}"))\n'
     return s+')\n'
@@ -36,7 +36,7 @@ project={'board':{'design_settings':{'rules':{'min_track_width':0.25,'min_cleara
          'meta':{'filename':'fieldnode.kicad_pro','version':1},'net_settings':{'classes':[{'name':'Default','clearance':0.2,'track_width':0.3,'via_diameter':0.6,'via_drill':0.3}]}}
 s=header+outline+'\n'+text('FIELDNODE',65,55,1.4)+text('SENSOR INTERFACE / REV A',77,86,0.8)+text('REVIEW FIXTURE',95,55,0.8)
 for j,(x,y) in enumerate([(54,54),(106,54),(54,86),(106,86)]):
-    s+=f'(footprint "Mount" (layer "F.Cu") (uuid "{uid("mount"+str(j))}") (at {x} {y}) (pad "" np_thru_hole circle (at 0 0) (size 2.5 2.5) (drill 2.5) (layers "*.Cu" "*.Mask")))\n'
+    s+=f'(footprint "Mount" (layer "F.Cu") (uuid "{uid("mount"+str(j))}") (at {x} {y}) (pad "" np_thru_hole circle (at 0 0) (size 2.5 2.5) (drill 2.5) (layers "*.Cu" "*.Mask") (uuid "{uid("mount-pad"+str(j))}")))\n'
 for side,x in [('J1',58),('J2',102)]:
     pads=[(0,i*2.54,(i%4)+1) for i in range(6)]
     s+=footprint(side,x,62,pads,(-1.6,-1.3,1.6,14.0))

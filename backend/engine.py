@@ -13,6 +13,8 @@ from .config import ENGINE_TIMEOUT, PINNED_ENGINE
 from .sexpr import tracks, parse, number
 from .storage import fingerprint
 from .limits import unix_limits,windows_job
+from .geometry import board_index, geometry_diff, signature
+from .review import enrich
 
 class EngineError(RuntimeError): pass
 
@@ -221,15 +223,27 @@ def board_bounds(text):
 
 def compare(old,new):
     a={x['id']:x for x in old.get('findings',[])}; b={x['id']:x for x in new.get('findings',[])}
+    rules_changed=old.get('rules_fingerprint')!=new.get('rules_fingerprint')
+    profile_changed=old.get('provenance',{}).get('rule_profile')!=new.get('provenance',{}).get('rule_profile')
+    engine_changed=old.get('engine_version')!=new.get('engine_version') or old.get('provenance',{}).get('normalizer')!=new.get('provenance',{}).get('normalizer')
+    coverage_changed=signature(old.get('coverage',[]))!=signature(new.get('coverage',[])) if not (old.get('coverage') and new.get('coverage')) else [(c['id'],c['status']) for c in old['coverage']]!=[(c['id'],c['status']) for c in new['coverage']]
+    unstable_identity=any(f.get('identity_status')!='stable_native_ids' for f in [*[a[k] for k in a.keys()-b.keys()],*[b[k] for k in b.keys()-a.keys()]])
+    comparable=not(rules_changed or profile_changed or engine_changed or coverage_changed or unstable_identity) and bool(old.get('provenance') and new.get('provenance'))
     return {'resolved':[a[k] for k in a.keys()-b.keys()], 'remaining':[b[k] for k in a.keys()&b.keys()], 'new':[b[k] for k in b.keys()-a.keys()],
-            'complete':old.get('status')=='completed' and new.get('status')=='completed'}
+            'complete':old.get('status')=='completed' and new.get('status')=='completed',
+            'resolution_verified':comparable and old.get('status')=='completed' and new.get('status')=='completed',
+            'rules_changed':rules_changed,'profile_changed':profile_changed,'engine_changed':engine_changed,'coverage_changed':coverage_changed,
+            'unstable_identity':unstable_identity,
+            'before_provenance':old.get('provenance',{}),'after_provenance':new.get('provenance',{}),
+            'changed_evidence':[{'before':a[k],'after':b[k]} for k in a.keys()&b.keys() if a[k].get('evidence_fingerprint')!=b[k].get('evidence_fingerprint')],
+            'geometry':geometry_diff(old.get('geometry'),new.get('geometry'))}
 
 def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
     artifacts.mkdir(parents=True,exist_ok=True)
     engine=KiCad(artifacts)
     before=fingerprint(source)
     rules=hashlib.sha256(b''.join(p.read_bytes() for p in sorted(source.rglob('*')) if p.suffix in ('.kicad_pro','.kicad_dru'))).hexdigest()
-    key=hashlib.sha256(json.dumps([before,rules,engine.version,manifest['root'],'refill-zones;all-severities;full-page-svg-v2']).encode()).hexdigest()
+    key=hashlib.sha256(json.dumps([before,rules,engine.version,manifest['root'],manifest.get('rule_profile'),'evidence-v2;geometry-v1;refill-zones;all-severities;full-page-svg-v2'],sort_keys=True).encode()).hexdigest()
     cache=artifacts/'result.json'
     if cache.exists():
         cached=json.loads(cache.read_text())
@@ -241,7 +255,7 @@ def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
     if work.exists(): shutil.rmtree(work)
     shutil.copytree(source,work)
     source=work
-    checks=[]; findings=[]; previews=[]
+    checks=[]; findings=[]; previews=[]; geometry={'version':'board-index-1.0','objects':[],'nets':[],'limitations':[]}
     root=manifest['root']
     if root is None: raise EngineError('Choose a root project before analysis')
     pcb=source/(root+'.kicad_pcb'); sch=source/(root+'.kicad_sch')
@@ -274,12 +288,65 @@ def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
     if not pcb.exists() or not sch.exists() or dependencies_missing:
         checks.append({'name':'Schematic / PCB parity','status':'skipped','message':'Requires a matching complete schematic and board with project dependencies.'})
     else: checks.append({'name':'Schematic / PCB parity','status':'completed' if next((c['status']=='completed' for c in checks if c['name']=='DRC'),False) else 'failed','message':'Included in PCB DRC.'})
+    if pcb.exists():
+        try:geometry=board_index(pcb.read_text(encoding='utf-8-sig'))
+        except (ValueError,TypeError,ArithmeticError) as e:checks.append({'name':'Object geometry','status':'failed','message':'Exact object mapping unavailable: '+str(e)})
+        native_python=Path(engine.exe).parent/('python.exe' if os.name=='nt' else 'python3')
+        if native_python.is_file():
+            try:
+                code,log=run([native_python,Path(__file__).with_name('native_geometry.py'),pcb,artifacts/'native-geometry.json'],source,artifacts/'native-geometry.log')
+                if code:raise EngineError(log[-500:])
+                native=json.loads((artifacts/'native-geometry.json').read_text(encoding='utf-8'))
+                index={o['id']:o for o in geometry['objects']}
+                persisted=set(geometry.get('persisted_ids',[]));untracked=0
+                for item in native['objects']:
+                    if item['id'] not in persisted:
+                        untracked+=1;continue
+                    prior=index.get(item['id'],{})
+                    merged={**prior,**item}
+                    merged['signature']=signature({k:v for k,v in merged.items() if k not in ('id','signature')})
+                    index[item['id']]=merged
+                geometry['objects']=list(index.values())
+                geometry['native_engine']=native['engine']
+                geometry['untracked_objects']=untracked
+                if untracked:geometry['limitations'].append(f'{untracked} native objects have no persistent source UUID and are omitted from exact revision matching.')
+            except (EngineError,ValueError,OSError) as e:
+                geometry['limitations'].append('Native envelopes unavailable; source-resolved supported objects only: '+str(e))
+    profile=manifest.get('rule_profile')
+    profile_coverage=[]
+    if profile and profile.get('constraints') and pcb.exists():
+        from .profiles import prepare_profile
+        progress('Checking fabrication profile')
+        fab_folder=artifacts/'fabrication-working'
+        if fab_folder.exists():shutil.rmtree(fab_folder)
+        try:
+            fab_pcb=prepare_profile(source,fab_folder,root,profile)
+            report=engine.report(fab_pcb,'DRC',artifacts/'fabrication-drc.json')
+            fab_findings=normalize(report,'DRC',pcb.relative_to(source).as_posix(),pcb.read_text(encoding='utf-8-sig'))
+            # Include only evidence that explicitly names one of our generated rules.
+            for f in fab_findings:
+                if 'CircuitCheck fabrication' not in f['evidence']:continue
+                f['id']=signature(['fabrication',profile['fingerprint'],f['id']])[:20]
+                f['source']='Fabrication DRC';f['repair']=None;f['rule_source']=profile['name']+' '+profile['version']
+                findings.append(f)
+            for key in profile['constraints']:
+                profile_coverage.append({'id':'fab_'+key,'name':'Fabrication · '+key.replace('_',' '),'status':'checked','count':sum(f['source']=='Fabrication DRC' and ('CircuitCheck fabrication '+key) in f['evidence'] and not f['excluded'] for f in findings),'message':'Native DRC against selected profile; project rules remain independently checked.','basis':profile['name']+' · '+profile['version']})
+            checks.append({'name':'Fabrication profile','status':'completed','message':'Native report retained as fabrication-drc.json.'})
+        except (EngineError,ValueError) as e:
+            checks.append({'name':'Fabrication profile','status':'failed','message':str(e)})
+            profile_coverage=[{'id':'fab_'+key,'name':'Fabrication · '+key.replace('_',' '),'status':'failed','count':None,'message':str(e)} for key in profile['constraints']]
+        finally:
+            if fab_folder.exists():shutil.rmtree(fab_folder)
+    else:
+        profile_coverage=[{'id':'fabrication','name':'Manufacturer constraints','status':'not_checked','count':None,'message':'Select or import a numeric rule profile and supply a board. An order reference alone does not establish constraints.'}]
     failed=any(x['status']=='failed' for x in checks)
     completed=any(x['name'] in ('DRC','ERC') and x['status']=='completed' for x in checks)
     status='failed' if not completed else ('partial' if failed or dependencies_missing else 'completed')
     result={'status':status,'engine_version':engine.version,'checks':checks,'findings':findings,'previews':previews,
             'project_hash':before,'rules_fingerprint':rules,'cache_key':key,'cached':False,'zone_policy':'Refilled in memory on working copies for DRC; originals and saved zone fills are never rewritten.',
             'notices':manifest['notices'],'finished_at':time.time()}
+    enrich(result,manifest,source,geometry)
+    result['coverage']+=profile_coverage
     if fingerprint(original_source)!=before: raise EngineError('Revision changed during analysis; result rejected')
     for p in original_source.rglob('*'):
         if p.is_file() and p.suffix!='.kicad_prl' and p.read_bytes()!=(source/p.relative_to(original_source)).read_bytes():
