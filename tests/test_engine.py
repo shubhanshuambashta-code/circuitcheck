@@ -30,6 +30,16 @@ def test_real_erc_and_netlist(engine,client,upload_fixture):
     xml=client.get(base+'netlist.xml')
     assert xml.status_code==200 and '<export' in xml.text
     assert any(p['kind']=='schematic' for p in result['previews'])
+    preview=next(p for p in result['previews'] if p['kind']=='schematic')
+    assert preview['file']=='erc.kicad_sch' and preview['sheet_path']=='/'
+    finding=next(f for f in result['findings'] if f['rule']=='pin_not_connected')
+    assert finding['schematic_preview']==preview['artifact']
+    geometry=result['schematic_geometry'][preview['artifact']]
+    pin=next(o for o in geometry['objects'] if o['id']==finding['schematic_object_ids'][0])
+    assert pin['points']==[[75.08,70.0]]
+    assert 'Native ERC coordinates' in pin['location_basis']
+    coverage=next(c for c in result['coverage'] if c['id']=='ERC')
+    assert coverage['status']=='partial' and 'simulation_model_issue' in coverage['message']
 
 def test_valid_schematic(engine,client,upload_fixture):
     p=upload_fixture('valid_schematic');r=finished(client,p)
@@ -57,6 +67,10 @@ def test_real_hierarchical_schematic(engine,client):
     p=response.json();r=finished(client,p)
     assert r['revision']['result']['status']=='completed',r
     assert len(r['revision']['result']['previews'])==2
+    previews=r['revision']['result']['previews']
+    assert {p['file'] for p in previews}=={'root.kicad_sch','sheets/child.kicad_sch'}
+    assert {p['sheet_path'] for p in previews}=={'/','/Sensor/'}
+    assert len({p['sheet_uuid'] for p in previews})==2
     assert not any('Missing subsheet' in n['message'] for n in r['revision']['manifest']['notices'])
 
 def test_real_custom_rules_and_missing_library(engine,client,upload_fixture):

@@ -54,7 +54,8 @@ with TestClient(app,headers={'X-CircuitCheck':'1'}) as client:
     footprint=next(n for n in parse(board).all('footprint') if any(p.arg()=='Reference' and p.arg(2)=='R2' for p in n.all('property')))
     atom=footprint.get('at').children[1]
     board=board[:atom.start]+'81'+board[atom.end:]
-    files=[('files',(p.name,board.encode() if p.name=='fieldnode.kicad_pcb' else p.read_bytes())) for p in folder.iterdir() if p.is_file()]
+    from generate_schematic_fixture import revision_b
+    files=[('files',(p.name,board.encode() if p.name=='fieldnode.kicad_pcb' else revision_b(p.read_text(encoding='utf-8-sig')).encode() if p.name=='fieldnode.kicad_sch' else p.read_bytes())) for p in folder.iterdir() if p.is_file()]
     response=client.post(f'/api/projects/{pid}/revisions',files=files);response.raise_for_status();bid=response.json()['revision_id']
     worker.tick()
     project=client.get(f'/api/projects/{pid}').json()
@@ -76,11 +77,12 @@ with TestClient(app,headers={'X-CircuitCheck':'1'}) as client:
             for p in (store/'source').rglob('*'):
                 if p.is_file():z.write(p,p.relative_to(store/'source').as_posix())
         out=demo/'artifacts'/rid;out.mkdir(parents=True)
-        for p in (store/'artifacts').glob('*'):
-            if p.suffix=='.svg':shutil.copyfile(p,out/p.name)
+        for p in (store/'artifacts').rglob('*'):
+            if p.suffix=='.svg':
+                target=out/p.relative_to(store/'artifacts');target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,target)
             elif p.name in ('drc.json','erc.json','fabrication-drc.json'):
                 report=json.loads(p.read_text(encoding='utf-8-sig'))
-                if 'source' in report:report['source']='fieldnode.kicad_pcb';report['recording_note']='Only the host source-path metadata is redacted. Native findings and measurements are unchanged.'
+                if 'source' in report:report['source']='fieldnode.kicad_sch' if p.name=='erc.json' else 'fieldnode.kicad_pcb';report['recording_note']='Only the host source-path metadata is redacted. Native findings and measurements are unchanged.'
                 (out/p.name).write_text(json.dumps(report,indent=2),encoding='utf-8')
     report=client.get(f'/api/projects/{pid}/review-report');report.raise_for_status()
     (demo/'recorded-review.html').write_text(report.text,encoding='utf-8')

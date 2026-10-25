@@ -1,0 +1,174 @@
+{
+  "$schema": "https://schemas.kicad.org/erc.v1.json",
+  "coordinate_units": "mm",
+  "date": "2026-10-24T20:59:36",
+  "ignored_checks": [
+    {
+      "description": "Global label only appears once in the schematic",
+      "key": "single_global_label"
+    },
+    {
+      "description": "Four connection points are joined together",
+      "key": "four_way_junction"
+    },
+    {
+      "description": "SPICE model issue",
+      "key": "simulation_model_issue"
+    },
+    {
+      "description": "Assigned footprint doesn't match footprint filters",
+      "key": "footprint_filter"
+    }
+  ],
+  "included_severities": [
+    "error",
+    "warning",
+    "exclusion"
+  ],
+  "kicad_version": "10.0.7",
+  "sheets": [
+    {
+      "path": "/",
+      "uuid_path": "/d28a8749-9878-5086-a2b5-823d369f9b35",
+      "violations": [
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol J1 [Header6]",
+              "pos": {
+                "x": 48.26,
+                "y": 60.96
+              },
+              "uuid": "c795d5c1-267b-50df-8794-069ae7c6e178"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol R1 [Passive2]",
+              "pos": {
+                "x": 60.96,
+                "y": 116.84
+              },
+              "uuid": "2cb75368-d7b0-5364-af27-2d6293d72fed"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol R4 [Passive2]",
+              "pos": {
+                "x": 60.96,
+                "y": 147.32
+              },
+              "uuid": "663f4951-7125-5fcf-bc78-2f50c7e95377"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol U1 [Interface16]",
+              "pos": {
+                "x": 111.76,
+                "y": 60.96
+              },
+              "uuid": "ade09201-6e2e-5266-b334-142791868421"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol R2 [Passive2]",
+              "pos": {
+                "x": 111.76,
+                "y": 116.84
+              },
+              "uuid": "991ce17d-e6f5-52ea-9bae-9e8cebf1eec7"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol R5 [Passive2]",
+              "pos": {
+                "x": 111.76,
+                "y": 147.32
+              },
+              "uuid": "b7ceb516-1afb-5f29-a3d2-d7cb3284163a"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol R3 [Passive2]",
+              "pos": {
+                "x": 162.56,
+                "y": 116.84
+              },
+              "uuid": "429b17a5-9154-54ae-8501-4f47d194ad72"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol R6 [Passive2]",
+              "pos": {
+                "x": 162.56,
+                "y": 147.32
+              },
+              "uuid": "46612eac-ef67-501f-9e43-503af9d5c2e8"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        },
+        {
+          "description": "The current configuration does not include the footprint library ''",
+          "items": [
+            {
+              "description": "Symbol J2 [Header6]",
+              "pos": {
+                "x": 175.26,
+                "y": 60.96
+              },
+              "uuid": "20f0d880-8538-5a78-a600-e15ed35e78ee"
+            }
+          ],
+          "severity": "warning",
+          "type": "footprint_link_issues"
+        }
+      ]
+    }
+  ],
+  "source": "fieldnode.kicad_sch",
+  "recording_note": "Only the host source-path metadata is redacted. Native findings and measurements are unchanged."
+}

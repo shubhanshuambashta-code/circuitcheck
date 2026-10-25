@@ -1,0 +1,40 @@
+[
+  {
+    "file": "track-width-before.zip",
+    "engine": "10.0.7",
+    "status": "completed",
+    "errors": 1,
+    "warnings": 1,
+    "rules": [
+      "track_width",
+      "track_dangling"
+    ],
+    "project_id": "51692482-d5a1-45b8-9c19-2c61d3cafb97",
+    "schematic_check": "Not checked: board-only test project",
+    "raw_report": "track-width-before-kicad-report.json"
+  },
+  {
+    "file": "track-width-corrected.zip",
+    "engine": "10.0.7",
+    "status": "completed",
+    "errors": 0,
+    "warnings": 1,
+    "rules": [
+      "track_dangling"
+    ],
+    "project_id": "93222be6-2e78-4663-9b6b-5e8be04176df",
+    "schematic_check": "Not checked: board-only test project",
+    "raw_report": "track-width-corrected-kicad-report.json"
+  },
+  {
+    "file": "empty-board-outline.zip",
+    "engine": "10.0.7",
+    "status": "completed",
+    "errors": 0,
+    "warnings": 0,
+    "rules": [],
+    "project_id": "21767938-43a8-4465-8103-8d14ba3c1d19",
+    "schematic_check": "Not checked: board-only test project",
+    "raw_report": "empty-board-outline-kicad-report.json"
+  }
+]

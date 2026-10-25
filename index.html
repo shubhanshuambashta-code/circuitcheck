@@ -1,1 +1,25 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="theme-color" content="#f5f6f7"/><meta name="description" content="CircuitCheck — an evidence-based KiCad design review workspace."/><title>CircuitCheck · Design review</title><link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg"/></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="theme-color" content="#f5f6f7"/>
+  <meta name="description" content="CircuitCheck — an evidence-based KiCad design review workspace."/>
+  <title>CircuitCheck · Design review</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg"/>
+</head>
+<body>
+  <div id="root"><p style="font:16px system-ui;padding:32px;color:#20434a">Opening CircuitCheck…</p></div>
+  <noscript>Enable JavaScript to inspect the CircuitCheck review workspace.</noscript>
+  <script type="module">
+    if (import.meta.env?.MODE) {
+      import('/src/main.tsx').catch(() => {
+        document.getElementById('root').textContent = 'CircuitCheck could not load. Start the local server or open the published site/ folder.';
+      });
+    } else {
+      // Branch-based Pages serves source files; use its committed production build.
+      window.location.replace(new URL('./site/', window.location.href));
+    }
+  </script>
+</body>
+</html>

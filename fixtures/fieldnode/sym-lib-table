@@ -1,0 +1,1 @@
+(sym_lib_table (lib (name "CircuitCheck") (type "KiCad") (uri "${KIPRJMOD}/CircuitCheck.kicad_sym") (options "") (descr "Original CC0 review fixture")))

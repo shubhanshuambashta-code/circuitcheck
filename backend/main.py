@@ -25,7 +25,7 @@ async def lifespan(app):
     db.init()
     yield
 
-app=FastAPI(title='CircuitCheck',version='0.2.0',lifespan=lifespan)
+app=FastAPI(title='CircuitCheck',version='0.2.1',lifespan=lifespan)
 app.add_middleware(TrustedHostMiddleware,allowed_hosts=['127.0.0.1','localhost','testserver','[::1]'])
 
 @app.middleware('http')

@@ -7,6 +7,9 @@ import subprocess
 import sys
 import time
 import webbrowser
+import json
+import socket
+import urllib.request
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
@@ -17,6 +20,19 @@ def main():
     parser.add_argument('--open',action='store_true')
     args=parser.parse_args()
     os.chdir(ROOT)
+    url=f'http://127.0.0.1:{args.port}'
+    try:
+        with urllib.request.urlopen(url+'/api/health',timeout=1) as response:health=json.load(response)
+        with urllib.request.urlopen(url+'/openapi.json',timeout=1) as response:info=json.load(response).get('info',{})
+        version=json.loads((ROOT/'package.json').read_text(encoding='utf-8-sig'))['version']
+        if health.get('status')=='ok' and health.get('deployment')=='local single-user' and info.get('title')=='CircuitCheck' and info.get('version')==version:
+            print(f'CircuitCheck is already running: {url}',flush=True)
+            if args.open:webbrowser.open(url)
+            return
+    except (OSError,ValueError):pass
+    with socket.socket() as probe:
+        try:probe.bind(('127.0.0.1',args.port))
+        except OSError:raise SystemExit(f'Port {args.port} is already in use. Close the other server or run scripts/start.py --port {args.port+1}.')
     from backend.config import DATA
     if not (ROOT/'dist/index.html').exists():
         raise SystemExit('Frontend build is missing. Run npm ci, then npm run build.')
@@ -30,10 +46,8 @@ def main():
     try:
         processes.append(subprocess.Popen([sys.executable,'-m','backend.worker'],cwd=ROOT))
         processes.append(subprocess.Popen([sys.executable,'-m','uvicorn','backend.main:app','--host','127.0.0.1','--port',str(args.port)],cwd=ROOT))
-        url=f'http://127.0.0.1:{args.port}'
         print(f'CircuitCheck: {url}\nPress Ctrl+C to stop the API and worker.',flush=True)
         if args.open:
-            import urllib.request
             for _ in range(30):
                 try:
                     urllib.request.urlopen(url+'/api/health',timeout=1)

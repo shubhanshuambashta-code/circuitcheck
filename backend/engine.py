@@ -14,7 +14,7 @@ from .sexpr import tracks, parse, number
 from .storage import fingerprint
 from .limits import unix_limits,windows_job
 from .geometry import board_index, geometry_diff, signature
-from .review import enrich
+from .review import enrich,ADAPTER_VERSION,NORMALIZER_VERSION
 
 class EngineError(RuntimeError): pass
 
@@ -121,19 +121,33 @@ class KiCad:
             info['layers'].append({'name':layer,'artifact':name})
         return info
 
-    def schematic_exports(self,source:Path,out:Path):
-        self.help(['sch','export','svg'])
+    def schematic_exports(self,source:Path,out:Path,project_root=None):
+        from .schematic import sheet_sources
+        help=self.help(['sch','export','svg'])
         folder=out/'schematic'; folder.mkdir(exist_ok=True)
-        code,log=run([self.exe,'sch','export','svg','--exclude-drawing-sheet','--output',folder,source],source.parent,out/'schematic-svg.log')
-        if code: raise EngineError(f'Schematic preview failed: {log[-700:]}')
-        previews=[]
-        for p in sorted(folder.glob('*.svg')):
-            info=sanitize_svg(p,board=False)
-            info['artifact']=p.relative_to(out).as_posix()
-            previews.append(info)
         self.help(['sch','export','netlist'])
         code,log=run([self.exe,'sch','export','netlist','--format','kicadxml','--output',out/'netlist.xml',source],source.parent,out/'netlist.log')
         if code: raise EngineError(f'Netlist export failed: {log[-700:]}')
+        project_root=project_root or source.parent
+        sources=sheet_sources(source,project_root)
+        pages=ET.parse(out/'netlist.xml').getroot().findall('design/sheet')
+        if '--pages' not in help:raise EngineError('Native per-sheet SVG export is unavailable; sheet mapping was not guessed.')
+        root_uuid=parse(source.read_text(encoding='utf-8-sig')).get('uuid').arg()
+        previews=[]
+        for page in pages:
+            number=page.get('number','')
+            if not re.fullmatch(r'[A-Za-z0-9._-]{1,32}',number):raise EngineError('Unsupported schematic page identifier')
+            path=sources.get(page.get('tstamps','/'))
+            if not path:raise EngineError('Native sheet could not be linked to its source')
+            target=folder/('page-'+number)
+            if target.exists():shutil.rmtree(target)
+            target.mkdir()
+            code,log=run([self.exe,'sch','export','svg','--exclude-drawing-sheet','--pages',number,'--output',target,source],source.parent,out/('schematic-page-'+number+'.log'))
+            exported=list(target.glob('*.svg'))
+            if code or len(exported)!=1:raise EngineError(f'Schematic page {number} export failed: {log[-700:]}')
+            p=exported[0];info=sanitize_svg(p,board=False)
+            info.update({'artifact':p.relative_to(out).as_posix(),'file':path.relative_to(project_root).as_posix(),'sheet_path':page.get('name','/'),'sheet_number':number,'sheet_uuid':'/'+root_uuid+page.get('tstamps','/').rstrip('/')})
+            previews.append(info)
         return previews
 
 def sanitize_svg(path:Path,board=False):
@@ -168,7 +182,7 @@ def normalize(report,kind,source,board_text=None):
     else:
         for sheet in report.get('sheets',[]):
             for v in sheet.get('violations',[]):
-                entries.append({**v,'sheet':sheet.get('path','')})
+                entries.append({**v,'sheet':sheet.get('path',''),'sheet_uuid':sheet.get('uuid_path','').rstrip('/')})
     track_map={t['id']:t for t in tracks(board_text)} if board_text else {}
     result=[]
     seen=set()
@@ -202,7 +216,7 @@ def normalize(report,kind,source,board_text=None):
         titles={'track_width':'Track width below configured minimum','track_dangling':'Track has an unconnected end','silk_over_copper':'Silkscreen overlaps a solder-mask opening','text_height':'Silkscreen text height outside rule','clearance':'Copper clearance below configured minimum','unconnected_items':'Connection is incomplete','pin_not_connected':'Pin is not connected'}
         result.append({'id':stable,'source':f'KiCad {kind}','category':'Rule violation','rule':rule,
                        'title':titles.get(rule,rule.replace('_',' ').capitalize()),'severity':v.get('severity','warning'),'excluded':excluded,
-                       'file':source,'sheet':v.get('sheet'),'objects':items,'object_ids':ids,'position':pos,
+                       'file':source,'sheet':v.get('sheet'),'sheet_uuid':v.get('sheet_uuid'),'objects':items,'object_ids':ids,'position':pos,
                        'layer':track['layer'] if track else None,'net':track['net'] if track else None,
                        'measured':measured,'required':required,'evidence':description,'explanation':description,
                        'suggestion':suggestions.get(rule,'Inspect the named objects and the reported rule in KiCad. Apply a design change appropriate to the evidence, then rerun this check.'),
@@ -243,7 +257,7 @@ def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
     engine=KiCad(artifacts)
     before=fingerprint(source)
     rules=hashlib.sha256(b''.join(p.read_bytes() for p in sorted(source.rglob('*')) if p.suffix in ('.kicad_pro','.kicad_dru'))).hexdigest()
-    key=hashlib.sha256(json.dumps([before,rules,engine.version,manifest['root'],manifest.get('rule_profile'),'evidence-v2;geometry-v1;refill-zones;all-severities;full-page-svg-v2'],sort_keys=True).encode()).hexdigest()
+    key=hashlib.sha256(json.dumps([before,rules,engine.version,manifest['root'],manifest.get('rule_profile'),ADAPTER_VERSION,NORMALIZER_VERSION,'geometry-v1;schematic-sheets-v1;refill-zones;all-severities;full-page-svg-v2'],sort_keys=True).encode()).hexdigest()
     cache=artifacts/'result.json'
     if cache.exists():
         cached=json.loads(cache.read_text())
@@ -271,7 +285,8 @@ def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
         try:
             report=engine.report(path,kind,artifacts/(kind.lower()+'.json'),parity=kind=='DRC' and sch.exists() and not dependencies_missing)
             findings+=normalize(report,kind,path.relative_to(source).as_posix(),path.read_text(encoding='utf-8-sig') if kind=='DRC' else None)
-            checks.append({'name':kind,'status':'completed','message':'Original report retained; project severities and exclusions included.'})
+            checks.append({'name':kind,'status':'completed','message':'Original report retained; project severities and exclusions included.',
+                           'ignored_checks':[x.get('key','unknown') for x in report.get('ignored_checks',[]) if isinstance(x,dict)]})
         except EngineError as e: checks.append({'name':kind,'status':'failed','message':str(e)})
         progress('Exporting board preview' if kind=='DRC' else 'Exporting sheets and netlist')
         try:
@@ -281,8 +296,8 @@ def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
                 previews.append(preview)
                 checks.append({'name':'PCB preview','status':'completed','message':'Unmirrored full-page SVG; millimetre origin preserved.'})
             else:
-                for preview in engine.schematic_exports(path,artifacts):
-                    preview['file']=path.relative_to(source).as_posix(); previews.append(preview)
+                for preview in engine.schematic_exports(path,artifacts,source):
+                    previews.append(preview)
                 checks.append({'name':'Schematic preview & netlist','status':'completed','message':'SVG sheets and native connectivity exported.'})
         except EngineError as e: checks.append({'name':f'{kind} exports','status':'failed','message':str(e)})
     if not pcb.exists() or not sch.exists() or dependencies_missing:
@@ -346,6 +361,14 @@ def analyze(source:Path,artifacts:Path,manifest,progress=lambda _:None):
             'project_hash':before,'rules_fingerprint':rules,'cache_key':key,'cached':False,'zone_policy':'Refilled in memory on working copies for DRC; originals and saved zone fills are never rewritten.',
             'notices':manifest['notices'],'finished_at':time.time()}
     enrich(result,manifest,source,geometry)
+    from .schematic import index_sheet
+    result['schematic_geometry']={}
+    for preview in previews:
+        if preview['kind']!='schematic':continue
+        # Preserve source paths relative to the complete upload, including nested roots.
+        file=preview['file']
+        result['schematic_geometry'][preview['artifact']]=index_sheet((source/file).read_text(encoding='utf-8-sig'),findings,preview)
+    result['provenance']['schematic_geometry']='schematic-index-1.0'
     result['coverage']+=profile_coverage
     if fingerprint(original_source)!=before: raise EngineError('Revision changed during analysis; result rejected')
     for p in original_source.rglob('*'):

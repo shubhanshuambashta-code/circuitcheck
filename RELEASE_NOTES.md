@@ -1,4 +1,4 @@
-# CircuitCheck 0.2.0
+# CircuitCheck 0.2.1
 
 CircuitCheck now centres review around native engineering evidence and revision comparison. The public website and local application share the same responsive interface.
 
@@ -9,6 +9,12 @@ Upload the complete KiCad project. Select a finding to locate UUID-resolved trac
 The inspector separates evidence, engineering review and optional explanation. Native checks establish the findings. AI explains selected evidence and cannot establish new violations or execute edits. Confirmed violations, review suggestions and potential concerns remain distinct. Native severity and native exclusions remain visible.
 
 Coverage distinguishes checked with findings, checked with no findings, partial, failed and not checked. It shows missing dependencies, ignored rule categories and unevaluated ratings, thermal/current, simulation and physical assembly checks. There is no safety percentage. Provenance includes source/rules/profile hashes and engineering, adapter, normalization, geometry and explanation-engine identifiers.
+
+## Review a schematic
+
+Select **Schematic** beside **Board**. Complete uploaded schematics are exported by KiCad, checked with ERC and supplied with a native netlist. The sheet selector follows native page numbers and hierarchy identities. Selecting an electrical finding opens its matching sheet and highlights UUID-resolved source objects or reported pin coordinates. Symbol highlights are labelled anchors rather than inferred body outlines. Unavailable mappings are explicit. Matching component/pad references can cross-probe to the board.
+
+Revision comparison also offers native schematic views. The recorded website includes a real unconnected R1 pin in revision A and the checked connection in revision B. Live uploads and editing require the local app; general schematic edits remain in KiCad. Coverage lists disabled native ERC checks rather than presenting them as passed.
 
 ## Compare revisions
 

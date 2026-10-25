@@ -4,7 +4,13 @@ Review a KiCad PCB project before sending it for fabrication. CircuitCheck runs 
 
 ![CircuitCheck engineering review workspace](public/images/review-v2-workspace.png)
 
-## Engineering review v0.2
+## Start on Windows
+
+Extract the ZIP completely. For a new installation, double-click **Setup CircuitCheck.cmd** once; then double-click **Start CircuitCheck.cmd** and keep its server window open. The supplied production frontend does not require Node.js during setup. Python and KiCad remain runtime prerequisites. This configured computer can reuse its existing installation through the private `data/runtime.json` file. Reopening the launcher reuses an already running matching local server.
+
+The hosted site is an interactive recording. It supports Actions deployment at the repository URL and a committed `site/` production build when GitHub Pages serves the main branch directly. Run `npm run build:branch-pages` when updating that fallback. Source HTML automatically opens the compiled fallback; it never asks a static host to execute TypeScript.
+
+## Engineering review v0.2.1
 
 - The local app and public website share the same review interface. The website is an **interactive recorded example**, clearly labelled; live uploads and edits require the local engine.
 - Click a finding to zoom to UUID-resolved tracks, pads, components or reported locations. Pads/components use explicit object envelopes. Net highlighting follows stored net assignments. Unavailable mappings are labelled and never guessed; schematic findings cross-probe only unambiguous matching component references/pads.
@@ -33,7 +39,7 @@ Supported numeric constraints: `track_width`, `clearance`, `hole_size`, `annular
 - Includes downloadable synthetic test projects with known expected results at `/test-files/`.
 - Works without an AI key. Optional model explanations are separate from the native check results.
 
-This is a local, single-user application. The workspace focuses on PCB review; accompanying schematics can still supply backend ERC and parity checks. The included Fieldnode design is an original synthetic test fixture, not a validated functional circuit.
+This is a local, single-user application. Switch between Board and Schematic to inspect native exports, select hierarchical sheets and navigate electrical-rule findings. ERC pins use native reported coordinates, symbols use labelled anchors and source wires retain their UUID paths. Revision comparison supports both board and schematic views. General schematic editing and logical net tracing remain in KiCad. The included Fieldnode design is an original synthetic test fixture, not a validated functional circuit.
 
 ## Tech stack
 

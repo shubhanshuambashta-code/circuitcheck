@@ -4,9 +4,9 @@ import json
 import os
 from .geometry import link_findings, signature
 
-ADAPTER_VERSION='circuitcheck-0.2.0'
-NORMALIZER_VERSION='evidence-2.0'
-ADVISORY_RULES={'lib_footprint_mismatch','lib_footprint_issues','lib_symbol_mismatch','lib_symbol_issues','footprint_type_mismatch'}
+ADAPTER_VERSION='circuitcheck-0.2.1'
+NORMALIZER_VERSION='evidence-2.1'
+ADVISORY_RULES={'lib_footprint_mismatch','lib_footprint_issues','lib_symbol_mismatch','lib_symbol_issues','footprint_type_mismatch','footprint_link_issues'}
 GROUPS=[
  ('copper_clearance','Copper clearance',{'clearance','shorting_items','tracks_crossing'}),
  ('track_width','Track width',{'track_width'}),
@@ -38,7 +38,9 @@ def build_coverage(checks, findings, manifest, settings):
     for name,label in [('ERC','Schematic electrical rules'),('Schematic / PCB parity','Schematic / PCB parity')]:
         check=next((c for c in checks if c['name']==name),{})
         status={'completed':'checked','failed':'failed'}.get(check.get('status'),'not_checked')
-        rows.append({'id':name,'name':label,'status':status,'count':sum(f['source']=='KiCad ERC' for f in findings) if name=='ERC' and status=='checked' else None,'message':check.get('message','Not evaluated.')})
+        ignored=check.get('ignored_checks',[]) if name=='ERC' else []
+        if ignored and status=='checked':status='partial'
+        rows.append({'id':name,'name':label,'status':status,'count':sum(f['source']=='KiCad ERC' and not f.get('excluded') for f in findings) if name=='ERC' and status in ('checked','partial') else None,'message':check.get('message','Not evaluated.')+(' Disabled native checks: '+', '.join(ignored)+'.' if ignored else '')})
     for key,label,reason in [
         ('ratings','Component voltage / power ratings','Component ratings and operating conditions were not evaluated.'),
         ('current','Current capacity / thermal performance','No electrothermal calculation or physical validation was performed.'),
@@ -58,7 +60,7 @@ def enrich(result, manifest, source, geometry):
     for f in result['findings']:
         f['classification']=evidence_class(f)
         f['classification_basis']='Native rule report; numerical values are shown only when present in the original evidence.' if f['classification']=='confirmed_violation' else 'Native library / consistency evidence requires engineering review.' if f['classification']=='review_suggestion' else 'The source did not establish a recognized rule violation.'
-        f['evidence_fingerprint']=signature([f['rule'],f.get('measured'),f.get('required'),f.get('evidence'),f.get('object_signature')])
+        f['evidence_fingerprint']=signature([f['rule'],f.get('measured'),f.get('required'),f.get('evidence'),f.get('object_signature'),f.get('objects')])
     result['geometry']=geometry
     result['coverage']=build_coverage(result['checks'],result['findings'],manifest,settings)
     unresolved=sum(f.get('identity_status')!='stable_native_ids' for f in result['findings'])

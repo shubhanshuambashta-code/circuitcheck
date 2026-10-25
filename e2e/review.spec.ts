@@ -94,3 +94,23 @@ test('custom fabrication profile creates a revision and measurable native findin
  await expect(page.locator('.r2-comparison-scope')).toContainText('Profile: changed');
  await expect(page.locator('.r2-change-groups').getByRole('button',{name:/No longer reported/})).toBeVisible();
 });
+
+test('schematic upload opens native ERC pin geometry and allows board/sheet navigation',async({page})=>{
+ await page.goto('/');await upload(page,'erc',['erc.kicad_sch','erc.kicad_pro']);
+ await expect(page.getByRole('button',{name:'Schematic',exact:true})).toHaveAttribute('aria-pressed','true');
+ await expect(page.getByLabel('Schematic sheet')).toContainText('/');
+ await expect(page.locator('.schematic-canvas image')).toHaveAttribute('href',/schematic/);
+ await expect(page.locator('.r2-inspector h2')).toHaveText('Pin is not connected');
+ await expect(page.locator('.schematic-canvas [data-highlight-status=selected] circle')).toHaveAttribute('cx','75.08');
+ await expect(page.locator('.schematic-canvas [data-highlight-status=selected] circle')).toHaveAttribute('cy','70');
+ await page.getByRole('button',{name:'Zoom in',exact:true}).click();
+ await page.getByRole('button',{name:'Fit design',exact:true}).click();
+ await page.screenshot({path:'screenshots/review-v2-schematic-local.png',fullPage:true});
+ await page.getByRole('button',{name:'Board',exact:true}).click();
+ await expect(page.locator('.schematic-canvas')).toHaveCount(0);
+ await expect(page.locator('.r2-board .board-svg')).toHaveCount(0);
+ await page.getByRole('button',{name:'Schematic',exact:true}).click();
+ await expect(page.locator('.schematic-canvas .board-svg')).toBeVisible();
+ await page.setViewportSize({width:390,height:1000});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
